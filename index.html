@@ -1,26 +1,51 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QIK - N.B.K.R. Institute Companion App</title>
-    <meta name="description" content="Your all-in-one companion for N.B.K.R. Institute. Track attendance, view mid-marks, access study notes, and get real-time college updates instantly.">
+    <title>QIK - The Ultimate Campus Companion</title>
+    <meta name="description"
+        content="Your all-in-one companion for N.B.K.R. Institute. Track attendance, view mid-marks, access study notes, and get real-time college updates instantly.">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
+                        sans: ['Outfit', 'sans-serif'],
                     },
                     colors: {
                         brand: {
-                            50: '#f0f9ff',
-                            100: '#e0f2fe',
-                            500: '#0ea5e9', // Sky blue-ish
-                            600: '#0284c7',
-                            900: '#0c4a6e',
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                            950: '#172554',
+                        }
+                    },
+                    animation: {
+                        'blob': 'blob 7s infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
                         }
                     }
                 }
@@ -28,34 +53,61 @@
         }
     </script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .glass {
-            background: rgba(255, 255, 255, 0.7);
+        body {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.6);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-900 antialiased selection:bg-brand-500 selection:text-white">
+
+<body class="bg-slate-50 text-slate-900 antialiased selection:bg-brand-500 selection:text-white overflow-x-hidden">
+
+    <!-- Ambient Background -->
+    <div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+        <div
+            class="absolute top-0 left-1/4 w-96 h-96 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob">
+        </div>
+        <div
+            class="absolute top-0 right-1/4 w-96 h-96 bg-brand-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000">
+        </div>
+        <div
+            class="absolute -bottom-32 left-1/3 w-96 h-96 bg-indigo-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000">
+        </div>
+    </div>
 
     <!-- Navigation -->
-    <nav class="fixed w-full z-50 transition-all duration-300 glass border-b border-slate-200/50">
+    <nav class="fixed w-full z-50 transition-all duration-300 glass-nav">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex-shrink-0 flex items-center">
-                    <span class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-600 to-indigo-600">QIK</span>
+            <div class="flex justify-between items-center h-20">
+                <div class="flex-shrink-0 flex items-center cursor-pointer" onclick="window.scrollTo(0,0)">
+                    <span
+                        class="text-3xl font-extrabold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-brand-600 to-indigo-600 hover:to-brand-600 transition-all duration-300">QIK</span>
                 </div>
                 <!-- Desktop Menu -->
-                <div class="hidden md:flex space-x-8">
-                    <a href="#features" class="text-slate-600 hover:text-brand-600 transition-colors font-medium">Features</a>
-                    <a href="#about" class="text-slate-600 hover:text-brand-600 transition-colors font-medium">About</a>
-                    <a href="mailto:muraliaggipothu@gmail.com" class="text-slate-600 hover:text-brand-600 transition-colors font-medium">Contact</a>
-                </div>
-                <!-- CTA Button -->
-                <div>
-                     <a href="#" class="inline-flex items-center justify-center px-5 py-2 border border-transparent text-sm font-medium rounded-full text-white bg-brand-600 hover:bg-brand-700 transition-shadow hover:shadow-lg shadow-brand-500/30">
-                        Download App
+                <div class="hidden md:flex items-center space-x-10">
+                    <a href="#features"
+                        class="text-slate-600 hover:text-brand-600 transition-colors font-medium text-sm">Features</a>
+                    <a href="#about"
+                        class="text-slate-600 hover:text-brand-600 transition-colors font-medium text-sm">About</a>
+                    <a href="mailto:muraliaggipothu@gmail.com"
+                        class="text-slate-600 hover:text-brand-600 transition-colors font-medium text-sm">Contact</a>
+                    <a href="https://github.com/tobioffice/QIK/releases/download/first/application-0bbc94e7-1c72-4d15-8bf9-e7ede81a3899.apk"
+                        class="inline-flex items-center justify-center px-6 py-2.5 border border-transparent text-sm font-semibold rounded-full text-white bg-brand-600 hover:bg-brand-700 hover:shadow-lg hover:shadow-brand-500/30 transition-all transform hover:-translate-y-0.5">
+                        Download Now
                     </a>
                 </div>
             </div>
@@ -63,125 +115,199 @@
     </nav>
 
     <!-- Hero Section -->
-    <section class="relative pt-32 pb-20 lg:pt-40 lg:pb-28 overflow-hidden">
-        <div class="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-100 via-slate-50 to-white"></div>
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight mb-6">
-                Your Campus Life, <br class="hidden sm:block" />
-                <span class="bg-clip-text text-transparent bg-gradient-to-r from-brand-500 to-indigo-600">Simpler & Faster.</span>
+    <section class="relative pt-40 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-brand-50 border border-brand-100 text-brand-600 text-xs font-semibold tracking-wide uppercase mb-6 animate-float">
+                🚀 Version 1.0.0 is Live
+            </span>
+            <h1
+                class="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-slate-900 tracking-tight mb-8 leading-tight">
+                Your Campus Life, <br />
+                <span
+                    class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600">Reimagined.</span>
             </h1>
-            <p class="mt-4 text-xl text-slate-600 max-w-2xl mx-auto mb-10">
-                Your all-in-one companion for N.B.K.R. Institute. Track attendance, view mid-marks, access study notes, and get real-time college updates instantly.
+            <p class="mt-4 text-xl sm:text-2xl text-slate-600 max-w-2xl mx-auto mb-12 leading-relaxed font-light">
+                The ultimate companion for N.B.K.R. Institute. Track attendance, check marks, and access resources—all
+                in one beautiful app.
             </p>
-            <div class="flex flex-col sm:flex-row justify-center gap-4">
-                <a href="#" class="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-brand-600 hover:bg-brand-700 md:text-lg transition-transform hover:-translate-y-1 shadow-xl shadow-brand-500/20">
-                    Get Started
+
+            <div class="flex flex-col sm:flex-row justify-center items-center gap-5">
+                <a href="https://github.com/tobioffice/QIK/releases/download/first/application-0bbc94e7-1c72-4d15-8bf9-e7ede81a3899.apk"
+                    class="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white transition-all duration-200 bg-brand-600 font-pj rounded-2xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-600 hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-500/30">
+                    <svg class="w-6 h-6 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    Download for Android
+                    <div
+                        class="absolute -inset-3 rounded-xl bg-brand-400 opacity-20 group-hover:opacity-40 blur-lg transition duration-200">
+                    </div>
                 </a>
-                <a href="#features" class="inline-flex items-center justify-center px-8 py-3 border border-slate-200 text-base font-medium rounded-xl text-slate-700 bg-white hover:bg-slate-50 md:text-lg transition-transform hover:-translate-y-1 shadow-sm">
-                    Learn More
+                <a href="#features"
+                    class="inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-slate-700 transition-all duration-200 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-600 hover:bg-slate-50 hover:text-brand-700 hover:border-brand-200 hover:-translate-y-1 shadow-sm">
+                    Explore Features
                 </a>
+            </div>
+
+            <!-- Tech Stack Badges -->
+            <div
+                class="mt-12 flex justify-center gap-4 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
+                <div class="flex items-center gap-2 text-xs font-mono text-slate-400">
+                    <span>Powered by Expo & React Native</span>
+                </div>
             </div>
         </div>
     </section>
 
     <!-- Features Section -->
-    <section id="features" class="py-20 bg-white">
+    <section id="features" class="py-24 relative">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-base text-brand-600 font-semibold tracking-wide uppercase">Key Features</h2>
-                <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-slate-900 sm:text-4xl">Everything you need in one place</p>
+            <div class="text-center mb-20">
+                <h2 class="text-brand-600 font-bold tracking-wide uppercase text-sm mb-3">Why QIK?</h2>
+                <p class="text-4xl text-slate-900 font-extrabold tracking-tight sm:text-5xl">Designed for Students</p>
+                <p class="mt-4 text-xl text-slate-500 max-w-2xl mx-auto">Focused on speed, simplicity, and aesthetics.
+                </p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <!-- Feature 1 -->
-                <div class="group relative p-8 bg-slate-50 rounded-3xl border border-slate-100 hover:border-brand-200 transition-all hover:shadow-xl hover:shadow-brand-500/5">
-                    <div class="absolute top-8 right-8 p-3 bg-brand-100 rounded-2xl text-brand-600 group-hover:scale-110 transition-transform">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                <div
+                    class="group glass-card p-8 rounded-3xl hover:bg-white/80 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-brand-500/10">
+                    <div
+                        class="w-14 h-14 bg-brand-50 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-6 text-brand-600 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
                     </div>
                     <h3 class="text-xl font-bold text-slate-900 mb-3">Personalized Dashboard</h3>
-                    <p class="text-slate-600 leading-relaxed">Securely log in with Google to see your specific academic data tailored just for you.</p>
+                    <p class="text-slate-600 leading-relaxed">Securely log in to see your academic data. Your
+                        attendance, marks, and info—private and personalized.</p>
                 </div>
 
                 <!-- Feature 2 -->
-                <div class="group relative p-8 bg-slate-50 rounded-3xl border border-slate-100 hover:border-brand-200 transition-all hover:shadow-xl hover:shadow-brand-500/5">
-                    <div class="absolute top-8 right-8 p-3 bg-indigo-100 rounded-2xl text-indigo-600 group-hover:scale-110 transition-transform">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                <div
+                    class="group glass-card p-8 rounded-3xl hover:bg-white/80 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-500/10">
+                    <div
+                        class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mb-6 text-blue-600 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-300">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                            </path>
+                        </svg>
                     </div>
                     <h3 class="text-xl font-bold text-slate-900 mb-3">Attendance & Marks</h3>
-                    <p class="text-slate-600 leading-relaxed">Stay on top of your game with real-time tracking of your attendance percentage and mid-exam results.</p>
+                    <p class="text-slate-600 leading-relaxed">Visual analytics for your academic performance. Track
+                        mid-marks and attendance percentages effortlessly.</p>
                 </div>
 
                 <!-- Feature 3 -->
-                <div class="group relative p-8 bg-slate-50 rounded-3xl border border-slate-100 hover:border-brand-200 transition-all hover:shadow-xl hover:shadow-brand-500/5">
-                    <div class="absolute top-8 right-8 p-3 bg-emerald-100 rounded-2xl text-emerald-600 group-hover:scale-110 transition-transform">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                <div
+                    class="group glass-card p-8 rounded-3xl hover:bg-white/80 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-emerald-500/10">
+                    <div
+                        class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center mb-6 text-emerald-600 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
+                            </path>
+                        </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-slate-900 mb-3">Academic Resources</h3>
-                    <p class="text-slate-600 leading-relaxed">Quick access to organized study notes via the 'Library' and up-to-date exam schedules.</p>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Resource Library</h3>
+                    <p class="text-slate-600 leading-relaxed">Study smarter with instant access to lecture notes,
+                        previous papers, and essential materials.</p>
                 </div>
 
                 <!-- Feature 4 -->
-                <div class="group relative p-8 bg-slate-50 rounded-3xl border border-slate-100 hover:border-brand-200 transition-all hover:shadow-xl hover:shadow-brand-500/5">
-                    <div class="absolute top-8 right-8 p-3 bg-amber-100 rounded-2xl text-amber-600 group-hover:scale-110 transition-transform">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                <div
+                    class="group glass-card p-8 rounded-3xl hover:bg-white/80 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-amber-500/10">
+                    <div
+                        class="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center mb-6 text-amber-600 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-300">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                        </svg>
                     </div>
                     <h3 class="text-xl font-bold text-slate-900 mb-3">Leaderboard</h3>
-                    <p class="text-slate-600 leading-relaxed">See where you stand among your peers with our integrated student leaderboard. Compete and improve.</p>
+                    <p class="text-slate-600 leading-relaxed">Healthy competition motivates. Check your rank and see
+                        where you stand among your peers.</p>
                 </div>
 
                 <!-- Feature 5 -->
-                <div class="group relative p-8 bg-slate-50 rounded-3xl border border-slate-100 hover:border-brand-200 transition-all hover:shadow-xl hover:shadow-brand-500/5">
-                    <div class="absolute top-8 right-8 p-3 bg-purple-100 rounded-2xl text-purple-600 group-hover:scale-110 transition-transform">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                <div
+                    class="group glass-card p-8 rounded-3xl hover:bg-white/80 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-purple-500/10">
+                    <div
+                        class="w-14 h-14 bg-purple-50 rounded-2xl flex items-center justify-center mb-6 text-purple-600 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+                            </path>
+                        </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-slate-900 mb-3">College Utilities</h3>
-                    <p class="text-slate-600 leading-relaxed">Includes helpful materials like the college bus tracker and instant campus notifications.</p>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Campus Utilities</h3>
+                    <p class="text-slate-600 leading-relaxed">Bus tracking, notifications, and more tools to navigate
+                        campus life smoothly.</p>
                 </div>
 
                 <!-- Feature 6 -->
-                <div class="group relative p-8 bg-slate-50 rounded-3xl border border-slate-100 hover:border-brand-200 transition-all hover:shadow-xl hover:shadow-brand-500/5">
-                     <div class="absolute top-8 right-8 p-3 bg-rose-100 rounded-2xl text-rose-600 group-hover:scale-110 transition-transform">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <div
+                    class="group glass-card p-8 rounded-3xl hover:bg-white/80 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-rose-500/10">
+                    <div
+                        class="w-14 h-14 bg-rose-50 rounded-2xl flex items-center justify-center mb-6 text-rose-600 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-300">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-slate-900 mb-3">Modern & Reliable</h3>
-                    <p class="text-slate-600 leading-relaxed">Built by students, for students. A modern tech stack ensures speed, reliability, and a clean user experience.</p>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Lightning Fast</h3>
+                    <p class="text-slate-600 leading-relaxed">No bloat. Just the features you need, delivered instantly.
+                        Built for performance.</p>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- About/Description Section -->
-    <section id="about" class="py-20 bg-slate-50">
-         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-             <h2 class="text-3xl font-bold text-slate-900 mb-8">Upgrade your college experience</h2>
-             <div class="prose prose-lg mx-auto text-slate-600">
-                 <p class="mb-6">
-                    Moving beyond the NbkristQik Telegram bot, the <strong>QIK app</strong> provides a seamless, high-performance experience designed specifically for students at <strong>N.B.K.R. Institute of Science & Technology</strong>.
-                 </p>
-                 <p class="mb-6">
-                     No more searching through chat history—everything you need is now just a tap away. We've consolidated your academic world into one intuitive interface.
-                 </p>
-                 <p>
-                     Join the community and make your campus life easier with QIK.
-                 </p>
-             </div>
-         </div>
+    <section id="about" class="py-24 bg-white/50 border-t border-slate-200">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-3xl font-bold text-slate-900 mb-8 tracking-tight">Upgrade Your College Experience</h2>
+            <div class="prose prose-lg mx-auto text-slate-600 leading-relaxed">
+                <p class="mb-8 text-xl">
+                    Moving beyond the generic chat-bots, the <strong>QIK app</strong> is a bespoke solution for
+                    <strong>N.B.K.R. Institute</strong>.
+                </p>
+                <p>
+                    We've consolidated scattered academic data into one beautiful, intuitive interface. No more
+                    scrolling through endless chat histories or navigating slow portals. Everything you need is now just
+                    one tap away.
+                </p>
+            </div>
+        </div>
     </section>
 
     <!-- Footer -->
-    <footer class="bg-white border-t border-slate-200 py-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
-            <div class="text-center md:text-left">
-                <span class="text-2xl font-bold text-slate-900">QIK</span>
-                <p class="text-slate-500 text-sm mt-2">© 2026 QIK App. All rights reserved.</p>
-            </div>
-            <div class="flex flex-wrap justify-center gap-6">
-                <a href="privacy.html" class="text-sm font-medium text-slate-600 hover:text-brand-600 transition-colors">Privacy Policy</a>
-                <a href="terms.html" class="text-sm font-medium text-slate-600 hover:text-brand-600 transition-colors">Terms of Service</a>
-                <a href="mailto:muraliaggipothu@gmail.com" class="text-sm font-medium text-slate-600 hover:text-brand-600 transition-colors">Support</a>
+    <footer class="bg-white border-t border-slate-200 py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-8">
+                <div class="text-center md:text-left">
+                    <span
+                        class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-indigo-600">QIK</span>
+                    <p class="text-slate-400 text-sm mt-2">© 2026 QIK App. Built with ❤️.</p>
+                </div>
+                <div class="flex flex-wrap justify-center gap-8">
+                    <a href="privacy.html"
+                        class="text-sm font-medium text-slate-500 hover:text-brand-600 transition-colors">Privacy
+                        Policy</a>
+                    <a href="terms.html"
+                        class="text-sm font-medium text-slate-500 hover:text-brand-600 transition-colors">Terms of
+                        Service</a>
+                    <a href="mailto:muraliaggipothu@gmail.com"
+                        class="text-sm font-medium text-slate-500 hover:text-brand-600 transition-colors">Support</a>
+                </div>
             </div>
         </div>
     </footer>
 
 </body>
+
 </html>
