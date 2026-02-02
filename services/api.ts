@@ -9,7 +9,7 @@ import type {
 // Configure your API base URL here
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
 const DEFAULT_TIMEOUT = 30000; // 30 seconds
-const MAX_RETRIES = 3;
+const MAX_ATTEMPTS = 3; // Total attempts (initial + 2 retries)
 const RETRY_DELAY_BASE = 1000; // 1 second
 
 // Token provider for auth - set by the app on initialization
@@ -36,7 +36,7 @@ interface ApiResponse<T> {
     error?: string;
 }
 
-interface FetchOptions extends RequestInit {
+interface FetchOptions extends Omit<RequestInit, 'signal'> {
     timeout?: number;
     retries?: number;
 }
@@ -50,6 +50,7 @@ function sleep(ms: number): Promise<void> {
 
 /**
  * Calculate exponential backoff delay
+ * Attempt 0: 1s, Attempt 1: 2s, Attempt 2: 4s
  */
 function getBackoffDelay(attempt: number): number {
     return RETRY_DELAY_BASE * Math.pow(2, attempt);
@@ -90,8 +91,11 @@ async function fetchApi<T>(
     options?: FetchOptions
 ): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
-    const maxRetries = options?.retries ?? MAX_RETRIES;
+    const maxAttempts = options?.retries !== undefined ? options.retries + 1 : MAX_ATTEMPTS;
     const timeout = options?.timeout ?? DEFAULT_TIMEOUT;
+
+    // Extract our custom options before passing to fetch
+    const { timeout: _, retries: __, ...fetchOptions } = options || {};
 
     // Get auth token if provider is set
     let authHeaders: Record<string, string> = {};
@@ -109,22 +113,36 @@ async function fetchApi<T>(
     let lastError: Error | null = null;
 
     // Retry loop
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
         try {
             const response = await fetchWithTimeout(
                 url,
                 {
+                    ...fetchOptions,
                     headers: {
                         'Content-Type': 'application/json',
+                        ...fetchOptions?.headers,
                         ...authHeaders,
-                        ...options?.headers,
                     },
-                    ...options,
                 },
                 timeout
             );
 
-            const json: ApiResponse<T> = await response.json().catch(() => ({}));
+            // Try to parse JSON, but handle failure gracefully
+            let json: ApiResponse<T>;
+            try {
+                json = await response.json();
+            } catch (parseError) {
+                // If JSON parse fails, create a structured error response
+                if (!response.ok) {
+                    throw new ApiError(
+                        response.status,
+                        `HTTP error ${response.status} (invalid JSON response)`
+                    );
+                }
+                // If response was OK but JSON invalid, throw parse error
+                throw new Error('Invalid JSON response from server');
+            }
 
             if (!response.ok) {
                 // Don't retry on client errors (4xx)
@@ -157,7 +175,7 @@ async function fetchApi<T>(
             }
 
             // If not the last attempt, wait and retry
-            if (attempt < maxRetries - 1) {
+            if (attempt < maxAttempts - 1) {
                 await sleep(getBackoffDelay(attempt));
                 continue;
             }
@@ -177,8 +195,11 @@ async function fetchApiRaw<T>(
     options?: FetchOptions
 ): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
-    const maxRetries = options?.retries ?? MAX_RETRIES;
+    const maxAttempts = options?.retries !== undefined ? options.retries + 1 : MAX_ATTEMPTS;
     const timeout = options?.timeout ?? DEFAULT_TIMEOUT;
+
+    // Extract our custom options
+    const { timeout: _, retries: __, ...fetchOptions } = options || {};
 
     // Get auth token if provider is set
     let authHeaders: Record<string, string> = {};
@@ -195,22 +216,33 @@ async function fetchApiRaw<T>(
 
     let lastError: Error | null = null;
 
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
         try {
             const response = await fetchWithTimeout(
                 url,
                 {
+                    ...fetchOptions,
                     headers: {
                         'Content-Type': 'application/json',
+                        ...fetchOptions?.headers,
                         ...authHeaders,
-                        ...options?.headers,
                     },
-                    ...options,
                 },
                 timeout
             );
 
-            const json = await response.json().catch(() => ({}));
+            let json: any;
+            try {
+                json = await response.json();
+            } catch (parseError) {
+                if (!response.ok) {
+                    throw new ApiError(
+                        response.status,
+                        `HTTP error ${response.status} (invalid JSON response)`
+                    );
+                }
+                throw new Error('Invalid JSON response from server');
+            }
 
             if (!response.ok) {
                 if (response.status >= 400 && response.status < 500) {
@@ -233,7 +265,7 @@ async function fetchApiRaw<T>(
                 throw error;
             }
 
-            if (attempt < maxRetries - 1) {
+            if (attempt < maxAttempts - 1) {
                 await sleep(getBackoffDelay(attempt));
                 continue;
             }

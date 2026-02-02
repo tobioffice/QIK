@@ -10,18 +10,21 @@ This PR implements high-priority fixes identified through codebase analysis. Foc
 
 **Solution**:
 - ✅ Removed all console.log/warn/error statements
-- ✅ Implemented exponential backoff retry logic (3 retries)
+- ✅ Implemented exponential backoff retry logic (3 attempts: 1s, 2s delays)
 - ✅ Built-in timeout handling (30s default)
 - ✅ Smart retry strategy (don't retry 4xx errors)
-- ✅ Cleaner error handling
+- ✅ Fixed header overwrite issue (spread order corrected)
+- ✅ Improved JSON parse error handling
 
 **Impact**:
 - More reliable API calls
 - Better handling of network issues
 - Production-ready logging (no sensitive data leaks)
+- Proper header precedence
 
 **Files Changed**:
 - `services/api.ts` - Complete rewrite with retry + timeout
+- Deleted `services/api.old.ts` (using git history instead)
 
 ### ✅ #48 - Error Boundaries (P1)
 **Problem**: No error boundaries - crashes leak to users
@@ -32,6 +35,7 @@ This PR implements high-priority fixes identified through codebase analysis. Foc
 - ✅ Custom error UI with "Try Again" button
 - ✅ Development mode shows error details
 - ✅ Production mode shows user-friendly message
+- ✅ Fixed ESLint warning (escaped apostrophe)
 
 **Impact**:
 - App won't crash completely on errors
@@ -46,23 +50,20 @@ This PR implements high-priority fixes identified through codebase analysis. Foc
 **Problem**: No linting, no code formatting, inconsistent code
 
 **Solution**:
-- ✅ Created `.eslintrc.js` with React Native best practices
+- ✅ Verified existing `eslint.config.js` (ESLint v9 flat config)
 - ✅ Created `.prettierrc` for consistent formatting
 - ✅ TypeScript strict mode already enabled (verified)
-- ✅ Configured rules:
-  - Warn on console.log (allow console.warn/error)
-  - TypeScript strict checking
-  - React Hooks rules
-  - Unused variables warnings
+- ✅ Removed redundant `.eslintrc.js` (conflicts with flat config)
+- ⚠️ Note: Prettier dependency needs to be added to `package.json` separately
 
 **Impact**:
-- Consistent code formatting
-- Catch errors early
-- Better code quality
+- Consistent code formatting (once Prettier is installed)
+- Better code quality with existing ESLint setup
+- No conflicts between config files
 
 **Files Changed**:
-- `.eslintrc.js` (new)
 - `.prettierrc` (new)
+- Removed redundant `.eslintrc.js`
 
 ### 🚧 #44 - Component Extraction (P0)
 **Status**: IN PROGRESS (OpenCode working on it)
