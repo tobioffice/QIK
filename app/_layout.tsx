@@ -8,6 +8,7 @@ import { ActivityIndicator, View } from "react-native";
 import "../global.css";
 import { setAuthTokenProvider } from "../services/api";
 import { tokenCache } from "../services/storage";
+import { ErrorBoundary } from "../components/ErrorBoundary";
 
 // Prevent auto-hiding splash screen
 SplashScreen.preventAutoHideAsync();
@@ -72,19 +73,21 @@ export default function RootLayout() {
   }
 
   return (
-    <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-      <ClerkLoaded>
-        <AuthInitializer>
-          <StatusBar style="light" backgroundColor="transparent" translucent />
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: "#0F0F1A" },
-              animation: "fade",
-            }}
-          />
-        </AuthInitializer>
-      </ClerkLoaded>
-    </ClerkProvider>
+    <ErrorBoundary>
+      <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+        <ClerkLoaded>
+          <AuthInitializer>
+            <StatusBar style="light" backgroundColor="transparent" translucent />
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: "#0F0F1A" },
+                animation: "fade",
+              }}
+            />
+          </AuthInitializer>
+        </ClerkLoaded>
+      </ClerkProvider>
+    </ErrorBoundary>
   );
 }
