@@ -8,6 +8,9 @@ import type {
 
 // Configure your API base URL here
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
+const DEFAULT_TIMEOUT = 30000; // 30 seconds
+const MAX_RETRIES = 3;
+const RETRY_DELAY_BASE = 1000; // 1 second
 
 // Token provider for auth - set by the app on initialization
 let getAuthToken: (() => Promise<string | null>) | null = null;
@@ -33,94 +36,213 @@ interface ApiResponse<T> {
     error?: string;
 }
 
-async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
+interface FetchOptions extends RequestInit {
+    timeout?: number;
+    retries?: number;
+}
+
+/**
+ * Sleep for specified milliseconds
+ */
+function sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Calculate exponential backoff delay
+ */
+function getBackoffDelay(attempt: number): number {
+    return RETRY_DELAY_BASE * Math.pow(2, attempt);
+}
+
+/**
+ * Fetch with timeout support
+ */
+async function fetchWithTimeout(
+    url: string,
+    options: RequestInit,
+    timeout: number = DEFAULT_TIMEOUT
+): Promise<Response> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    try {
+        const response = await fetch(url, {
+            ...options,
+            signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        return response;
+    } catch (error) {
+        clearTimeout(timeoutId);
+        if (error instanceof Error && error.name === 'AbortError') {
+            throw new Error('Request timeout');
+        }
+        throw error;
+    }
+}
+
+/**
+ * Core fetch function with retry logic and timeout
+ */
+async function fetchApi<T>(
+    endpoint: string,
+    options?: FetchOptions
+): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
+    const maxRetries = options?.retries ?? MAX_RETRIES;
+    const timeout = options?.timeout ?? DEFAULT_TIMEOUT;
 
     // Get auth token if provider is set
     let authHeaders: Record<string, string> = {};
     if (getAuthToken) {
         try {
             const token = await getAuthToken();
-            console.log('[API] Token retrieval:', token ? 'Success (token present)' : 'Failed (token is null)');
             if (token) {
                 authHeaders['Authorization'] = `Bearer ${token}`;
-            } else {
-                console.warn('[API] Warning: No auth token available for request to', endpoint);
             }
         } catch (e) {
-            console.error('[API] Error retrieving token:', e);
+            // Silently fail - auth is optional for some endpoints
         }
-    } else {
-        console.warn('[API] Warning: Auth token provider not set for request to', endpoint);
     }
 
-    try {
-        const response = await fetch(url, {
-            headers: {
-                'Content-Type': 'application/json',
-                ...authHeaders,
-                ...options?.headers,
-            },
-            ...options,
-        });
+    let lastError: Error | null = null;
 
-        const json: ApiResponse<T> = await response.json().catch(() => ({}));
+    // Retry loop
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+            const response = await fetchWithTimeout(
+                url,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...authHeaders,
+                        ...options?.headers,
+                    },
+                    ...options,
+                },
+                timeout
+            );
 
-        if (!response.ok) {
-            throw new ApiError(response.status, json.error || `HTTP error ${response.status}`);
-        }
+            const json: ApiResponse<T> = await response.json().catch(() => ({}));
 
-        // Handle wrapped response format: { success: true, data: {...} }
-        if (json.success && json.data !== undefined) {
-            return json.data;
-        }
+            if (!response.ok) {
+                // Don't retry on client errors (4xx)
+                if (response.status >= 400 && response.status < 500) {
+                    throw new ApiError(
+                        response.status,
+                        json.error || `HTTP error ${response.status}`
+                    );
+                }
+                // Retry on server errors (5xx)
+                throw new ApiError(
+                    response.status,
+                    json.error || `HTTP error ${response.status}`
+                );
+            }
 
-        // Handle direct response format (backward compatibility)
-        return json as unknown as T;
-    } catch (error) {
-        if (error instanceof ApiError) {
+            // Handle wrapped response format: { success: true, data: {...} }
+            if (json.success && json.data !== undefined) {
+                return json.data;
+            }
+
+            // Handle direct response format (backward compatibility)
+            return json as unknown as T;
+        } catch (error) {
+            lastError = error instanceof Error ? error : new Error('Unknown error');
+
+            // Don't retry on client errors
+            if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
+                throw error;
+            }
+
+            // If not the last attempt, wait and retry
+            if (attempt < maxRetries - 1) {
+                await sleep(getBackoffDelay(attempt));
+                continue;
+            }
+
+            // Last attempt failed, throw the error
             throw error;
         }
-        throw new Error(`Network error: ${(error as Error).message}`);
     }
+
+    // This should never be reached, but TypeScript needs it
+    throw lastError || new Error('Request failed after retries');
 }
 
 // For endpoints that return the full response object (not just data field)
-async function fetchApiRaw<T>(endpoint: string, options?: RequestInit): Promise<T> {
+async function fetchApiRaw<T>(
+    endpoint: string,
+    options?: FetchOptions
+): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
+    const maxRetries = options?.retries ?? MAX_RETRIES;
+    const timeout = options?.timeout ?? DEFAULT_TIMEOUT;
 
     // Get auth token if provider is set
     let authHeaders: Record<string, string> = {};
     if (getAuthToken) {
-        const token = await getAuthToken();
-        if (token) {
-            authHeaders['Authorization'] = `Bearer ${token}`;
+        try {
+            const token = await getAuthToken();
+            if (token) {
+                authHeaders['Authorization'] = `Bearer ${token}`;
+            }
+        } catch (e) {
+            // Silently fail
         }
     }
 
-    try {
-        const response = await fetch(url, {
-            headers: {
-                'Content-Type': 'application/json',
-                ...authHeaders,
-                ...options?.headers,
-            },
-            ...options,
-        });
+    let lastError: Error | null = null;
 
-        const json = await response.json().catch(() => ({}));
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+            const response = await fetchWithTimeout(
+                url,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...authHeaders,
+                        ...options?.headers,
+                    },
+                    ...options,
+                },
+                timeout
+            );
 
-        if (!response.ok) {
-            throw new ApiError(response.status, json.error || `HTTP error ${response.status}`);
-        }
+            const json = await response.json().catch(() => ({}));
 
-        return json as T;
-    } catch (error) {
-        if (error instanceof ApiError) {
+            if (!response.ok) {
+                if (response.status >= 400 && response.status < 500) {
+                    throw new ApiError(
+                        response.status,
+                        json.error || `HTTP error ${response.status}`
+                    );
+                }
+                throw new ApiError(
+                    response.status,
+                    json.error || `HTTP error ${response.status}`
+                );
+            }
+
+            return json as T;
+        } catch (error) {
+            lastError = error instanceof Error ? error : new Error('Unknown error');
+
+            if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
+                throw error;
+            }
+
+            if (attempt < maxRetries - 1) {
+                await sleep(getBackoffDelay(attempt));
+                continue;
+            }
+
             throw error;
         }
-        throw new Error(`Network error: ${(error as Error).message}`);
     }
+
+    throw lastError || new Error('Request failed after retries');
 }
 
 // User endpoints
