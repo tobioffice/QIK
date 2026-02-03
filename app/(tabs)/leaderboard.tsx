@@ -321,58 +321,73 @@ export default function LeaderboardScreen() {
     const [refreshing, setRefreshing] = useState(false);
     const [userRollNo, setUserRollNo] = useState<string | null>(null);
     const [sortBy, setSortBy] = useState<"attendance" | "midmarks">("attendance");
-    const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const pageRef = useRef(1);
 
     const fetchData = useCallback(
         async (reset = false) => {
+            // Prevent duplicate requests
+            if (loadingMore && !reset) return;
+
             try {
                 const rollNo = await getRollNumber();
                 setUserRollNo(rollNo?.toUpperCase() || null);
 
-                const currentPage = reset ? 1 : page;
+                if (reset) {
+                    pageRef.current = 1;
+                    setLoading(true);
+                } else {
+                    setLoadingMore(true);
+                }
+
                 const params: LeaderboardParams = {
-                    page: currentPage,
+                    page: pageRef.current,
                     limit: 50,
                     sort: sortBy,
                 };
 
                 const response = await getLeaderboard(params);
+                const newData = response.data || [];
 
                 if (reset) {
-                    setData(response.data || []);
-                    setPage(1);
+                    setData(newData);
                 } else {
-                    setData((prev) => [...prev, ...(response.data || [])]);
+                    // Only append if we have new data and it's not a duplicate
+                    setData((prev) => {
+                        const existingRolls = new Set(prev.map(item => item.roll_no));
+                        const uniqueNew = newData.filter(item => !existingRolls.has(item.roll_no));
+                        return [...prev, ...uniqueNew];
+                    });
                 }
 
-                setHasMore((response.data?.length || 0) === params.limit);
+                setHasMore(newData.length === params.limit);
             } catch (err) {
                 console.error("Failed to fetch leaderboard:", err);
             } finally {
                 setLoading(false);
                 setRefreshing(false);
+                setLoadingMore(false);
             }
         },
-        [page, sortBy]
+        [sortBy, loadingMore]
     );
 
     useEffect(() => {
-        setLoading(true);
-        setPage(1);
+        pageRef.current = 1;
         fetchData(true);
     }, [sortBy]);
 
     const onRefresh = useCallback(() => {
         setRefreshing(true);
-        setPage(1);
+        pageRef.current = 1;
         fetchData(true);
     }, [fetchData]);
 
     const loadMore = () => {
-        if (!loading && hasMore) {
-            setPage((p) => p + 1);
-            fetchData();
+        if (!loading && !loadingMore && hasMore) {
+            pageRef.current += 1;
+            fetchData(false);
         }
     };
 
