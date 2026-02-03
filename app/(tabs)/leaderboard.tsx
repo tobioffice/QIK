@@ -13,6 +13,7 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Skeleton } from "../../components/Skeleton";
 import { getLeaderboard } from "../../services/api";
 import { getRollNumber } from "../../services/storage";
 import type { LeaderboardEntry, LeaderboardParams } from "../../types";
@@ -394,14 +395,41 @@ export default function LeaderboardScreen() {
     if (loading && data.length === 0) {
         return (
             <View style={styles.container}>
-                <SafeAreaView style={styles.loadingContent}>
-                    <LinearGradient
-                        colors={['rgba(124, 58, 237, 0.2)', 'rgba(6, 182, 212, 0.1)']}
-                        style={styles.loadingGradient}
-                    >
-                        <ActivityIndicator size="large" color="#7C3AED" />
-                        <Text style={styles.loadingText}>Loading rankings...</Text>
-                    </LinearGradient>
+                <LinearGradient
+                    colors={['rgba(124, 58, 237, 0.15)', 'transparent']}
+                    style={styles.bgGradient}
+                />
+                <SafeAreaView style={styles.safeArea} edges={["top"]}>
+                    {/* Skeleton Header */}
+                    <View style={styles.headerContainer}>
+                        <View style={styles.headerContent}>
+                            <Skeleton width={56} height={56} borderRadius={18} />
+                            <View style={styles.headerTextContainer}>
+                                <Skeleton width={180} height={28} borderRadius={8} />
+                                <Skeleton width={140} height={14} borderRadius={6} style={{ marginTop: 8 }} />
+                            </View>
+                        </View>
+                    </View>
+
+                    {/* Skeleton Toggle */}
+                    <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
+                        <Skeleton width="100%" height={52} borderRadius={16} />
+                    </View>
+
+                    {/* Skeleton Rows */}
+                    {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+                        <View key={i} style={styles.skeletonRow}>
+                            <Skeleton width={48} height={48} borderRadius={16} />
+                            <View style={{ flex: 1, marginLeft: 14 }}>
+                                <Skeleton width="70%" height={16} borderRadius={6} />
+                                <Skeleton width="40%" height={12} borderRadius={4} style={{ marginTop: 8 }} />
+                            </View>
+                            <View style={{ alignItems: 'flex-end' }}>
+                                <Skeleton width={60} height={22} borderRadius={6} />
+                                <Skeleton width={50} height={10} borderRadius={4} style={{ marginTop: 6 }} />
+                            </View>
+                        </View>
+                    ))}
                 </SafeAreaView>
             </View>
         );
@@ -803,5 +831,14 @@ const styles = StyleSheet.create({
         fontFamily: 'Inter_400Regular',
         fontSize: 14,
         color: '#52525B',
+    },
+    skeletonRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginHorizontal: 16,
+        marginBottom: 10,
+        backgroundColor: 'rgba(255, 255, 255, 0.03)',
+        borderRadius: 18,
+        padding: 14,
     },
 });

@@ -19,6 +19,7 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Skeleton } from "../../components/Skeleton";
 import { getUserDetails, isValidRollNumber, syncUser } from "../../services/api";
 import {
     clearRollNumber,
@@ -231,14 +232,65 @@ export default function ProfileScreen() {
 
     if (loading) {
         return (
-            <SafeAreaView style={styles.loadingContainer}>
+            <SafeAreaView style={styles.container} edges={["top"]}>
                 <LinearGradient
-                    colors={['rgba(124, 58, 237, 0.2)', 'rgba(6, 182, 212, 0.1)']}
-                    style={styles.loadingGradient}
-                >
-                    <ActivityIndicator size="large" color="#7C3AED" />
-                    <Text style={styles.loadingText}>Loading profile...</Text>
-                </LinearGradient>
+                    colors={['rgba(124, 58, 237, 0.15)', 'transparent']}
+                    style={styles.bgGradient}
+                />
+                <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+                    {/* Skeleton Header */}
+                    <View style={styles.header}>
+                        <View style={styles.avatarContainer}>
+                            <Skeleton width={100} height={100} borderRadius={50} />
+                        </View>
+                        <Skeleton width={180} height={26} borderRadius={8} style={{ marginTop: 20 }} />
+                        <Skeleton width={220} height={14} borderRadius={6} style={{ marginTop: 8 }} />
+
+                        {/* Quick Stats Skeleton */}
+                        <View style={[styles.quickStats, { marginTop: 24 }]}>
+                            <View style={styles.statItem}>
+                                <Skeleton width={40} height={18} borderRadius={6} />
+                                <Skeleton width={30} height={12} borderRadius={4} style={{ marginTop: 4 }} />
+                            </View>
+                            <View style={styles.statDivider} />
+                            <View style={styles.statItem}>
+                                <Skeleton width={50} height={18} borderRadius={6} />
+                                <Skeleton width={45} height={12} borderRadius={4} style={{ marginTop: 4 }} />
+                            </View>
+                            <View style={styles.statDivider} />
+                            <View style={styles.statItem}>
+                                <Skeleton width={30} height={18} borderRadius={6} />
+                                <Skeleton width={50} height={12} borderRadius={4} style={{ marginTop: 4 }} />
+                            </View>
+                        </View>
+                    </View>
+
+                    {/* Roll Number Card Skeleton */}
+                    <View style={styles.skeletonCard}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+                            <Skeleton width={40} height={40} borderRadius={12} />
+                            <Skeleton width={100} height={18} borderRadius={6} style={{ marginLeft: 12 }} />
+                        </View>
+                        <Skeleton width="100%" height={60} borderRadius={16} />
+                    </View>
+
+                    {/* Student Details Card Skeleton */}
+                    <View style={styles.skeletonCard}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+                            <Skeleton width={40} height={40} borderRadius={12} />
+                            <Skeleton width={130} height={18} borderRadius={6} style={{ marginLeft: 12 }} />
+                        </View>
+                        {[1, 2, 3, 4].map((i) => (
+                            <View key={i} style={styles.skeletonInfoRow}>
+                                <Skeleton width={40} height={40} borderRadius={12} />
+                                <View style={{ flex: 1, marginLeft: 14 }}>
+                                    <Skeleton width="30%" height={12} borderRadius={4} />
+                                    <Skeleton width="60%" height={15} borderRadius={4} style={{ marginTop: 6 }} />
+                                </View>
+                            </View>
+                        ))}
+                    </View>
+                </ScrollView>
             </SafeAreaView>
         );
     }
@@ -812,5 +864,22 @@ const styles = StyleSheet.create({
         color: '#52525B',
         textAlign: 'center',
         marginTop: 32,
+    },
+
+    // Skeleton loading styles
+    skeletonCard: {
+        backgroundColor: 'rgba(255, 255, 255, 0.03)',
+        borderRadius: 24,
+        padding: 20,
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.08)',
+    },
+    skeletonInfoRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(255, 255, 255, 0.05)',
     },
 });

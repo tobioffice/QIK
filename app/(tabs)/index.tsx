@@ -17,6 +17,7 @@ import Svg, { Circle, Defs, Stop, LinearGradient as SvgGradient } from "react-na
 import { getAttendance, getMidmarks } from "../../services/api";
 import { getRollNumber } from "../../services/storage";
 import type { Attendance, Midmarks } from "../../types";
+import { HomeLoadingSkeleton } from "../../components/HomeLoadingSkeleton";
 
 // Glass Card Component with enhanced styling
 function GlassCard({
@@ -387,14 +388,8 @@ export default function HomeScreen() {
 
     if (loading) {
         return (
-            <SafeAreaView style={styles.loadingContainer}>
-                <LinearGradient
-                    colors={['rgba(124, 58, 237, 0.2)', 'rgba(6, 182, 212, 0.1)']}
-                    style={styles.loadingGradient}
-                >
-                    <ActivityIndicator size="large" color="#7C3AED" />
-                    <Text style={styles.loadingText}>Loading your data...</Text>
-                </LinearGradient>
+            <SafeAreaView style={styles.container}>
+                <HomeLoadingSkeleton />
             </SafeAreaView>
         );
     }
