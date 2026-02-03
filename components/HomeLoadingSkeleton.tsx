@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Skeleton } from './Skeleton';
 
 export const HomeLoadingSkeleton: React.FC = () => {
@@ -24,7 +24,7 @@ export const HomeLoadingSkeleton: React.FC = () => {
           <Skeleton width={60} height={18} />
         </View>
         <View style={styles.divider} />
-        
+
         {/* Subject rows */}
         {[1, 2, 3, 4].map((i) => (
           <View key={i} style={styles.subjectRow}>
@@ -41,7 +41,7 @@ export const HomeLoadingSkeleton: React.FC = () => {
           <Skeleton width={60} height={18} />
         </View>
         <View style={styles.divider} />
-        
+
         {/* Subject rows */}
         {[1, 2, 3, 4].map((i) => (
           <View key={i} style={styles.subjectRow}>
