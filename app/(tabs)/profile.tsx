@@ -343,7 +343,7 @@ export default function ProfileScreen() {
                     {studentInfo && (
                         <View style={styles.quickStats}>
                             <View style={styles.statItem}>
-                                <Text style={styles.statValue}>{studentInfo.year}</Text>
+                                <Text style={styles.statValue}>{studentInfo.year.slice(0, 1)}</Text>
                                 <Text style={styles.statLabel}>Year</Text>
                             </View>
                             <View style={styles.statDivider} />

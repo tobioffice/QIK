@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.QIK"
+      "bundleIdentifier": "com.tobioffice.qik"
     },
     "android": {
       "adaptiveIcon": {
@@ -21,7 +21,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.QIK"
+      "package": "com.tobioffice.qik"
     },
     "web": {
       "output": "static",
@@ -51,6 +51,12 @@
       "eas": {
         "projectId": "17a7a1e2-383b-41a5-9d39-00741499dac2"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/17a7a1e2-383b-41a5-9d39-00741499dac2"
     }
   }
 }
