@@ -4,20 +4,21 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-    ActivityIndicator,
     Animated,
+    Modal,
     RefreshControl,
     ScrollView,
     StyleSheet,
     Text,
-    View,
+    TouchableOpacity,
+    View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Circle, Defs, Stop, LinearGradient as SvgGradient } from "react-native-svg";
-import { getAttendance, getMidmarks } from "../../services/api";
+import { HomeLoadingSkeleton } from "../../components/HomeLoadingSkeleton";
+import { getAttendance, getMidmarks, getStudentRank, type RankResponse } from "../../services/api";
 import { getRollNumber } from "../../services/storage";
 import type { Attendance, Midmarks } from "../../types";
-import { HomeLoadingSkeleton } from "../../components/HomeLoadingSkeleton";
 
 // Glass Card Component with enhanced styling
 function GlassCard({
@@ -282,6 +283,139 @@ function MidmarksCard({ midmarks }: { midmarks: Midmarks | null }) {
     );
 }
 
+// Context Selector Modal
+function ContextSelectorModal({
+    visible,
+    options,
+    selectedValue,
+    onSelect,
+    onClose,
+}: {
+    visible: boolean;
+    options: { label: string; value: string }[];
+    selectedValue: string;
+    onSelect: (value: string) => void;
+    onClose: () => void;
+}) {
+    return (
+        <Modal
+            visible={visible}
+            transparent
+            animationType="fade"
+            onRequestClose={onClose}
+        >
+            <TouchableOpacity
+                style={styles.modalOverlay}
+                activeOpacity={1}
+                onPress={onClose}
+            >
+                <View style={styles.modalContainer}>
+                    <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />
+                    <View style={styles.modalBorder} />
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>View Rank By</Text>
+                        <View>
+                            {options.map((option) => (
+                                <TouchableOpacity
+                                    key={option.value}
+                                    style={[
+                                        styles.modalOption,
+                                        selectedValue === option.value && styles.modalOptionSelected,
+                                    ]}
+                                    onPress={() => {
+                                        onSelect(option.value);
+                                        onClose();
+                                    }}
+                                >
+                                    {selectedValue === option.value && (
+                                        <LinearGradient
+                                            colors={['rgba(124, 58, 237, 0.3)', 'rgba(124, 58, 237, 0.1)']}
+                                            style={StyleSheet.absoluteFill}
+                                        />
+                                    )}
+                                    <Text style={[
+                                        styles.modalOptionText,
+                                        selectedValue === option.value && styles.modalOptionTextSelected,
+                                    ]}>
+                                        {option.label}
+                                    </Text>
+                                    {selectedValue === option.value && (
+                                        <Ionicons name="checkmark" size={20} color="#7C3AED" />
+                                    )}
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    </View>
+                </View>
+            </TouchableOpacity>
+        </Modal>
+    );
+}
+
+// Rank Card Component
+function RankCard({
+    rankData,
+    context,
+    onContextChange
+}: {
+    rankData: RankResponse | null;
+    context: 'college' | 'year' | 'branch' | 'section';
+    onContextChange: (ctx: 'college' | 'year' | 'branch' | 'section') => void;
+}) {
+    const [modalVisible, setModalVisible] = useState(false);
+
+    if (!rankData) return null;
+
+    const contexts = [
+        { label: 'College', value: 'college' },
+        { label: 'Year', value: 'year' },
+        { label: 'Branch', value: 'branch' },
+        { label: 'Section', value: 'section' },
+    ];
+
+    const currentLabel = contexts.find(c => c.value === context)?.label || 'College';
+
+    return (
+        <>
+            <GlassCard>
+                <View style={styles.rankCardContent}>
+                    <View style={styles.rankInfo}>
+                        <Text style={styles.rankLabel}>CURRENT RANK</Text>
+                        <View style={styles.rankValueContainer}>
+                            <Text style={styles.rankPrefix}>#</Text>
+                            <Text style={styles.rankValue}>{rankData.rank}</Text>
+                            <Text style={styles.rankTotal}> / {rankData.totalStudents}</Text>
+                        </View>
+                        <Text style={styles.rankSubtext}>
+                            Based on attendance
+                        </Text>
+                    </View>
+
+                    {/* Context Selector */}
+                    <View style={styles.contextContainer}>
+                        <TouchableOpacity
+                            style={styles.contextButton}
+                            onPress={() => setModalVisible(true)}
+                            activeOpacity={0.7}
+                        >
+                            <Text style={styles.contextButtonText}>{currentLabel}</Text>
+                            <Ionicons name="chevron-down" size={16} color="#A1A1AA" />
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </GlassCard>
+
+            <ContextSelectorModal
+                visible={modalVisible}
+                options={contexts}
+                selectedValue={context}
+                onSelect={(val) => onContextChange(val as any)}
+                onClose={() => setModalVisible(false)}
+            />
+        </>
+    );
+}
+
 // Error Card Component
 function ErrorCard({ icon, message }: { icon: string; message: string }) {
     return (
@@ -305,6 +439,8 @@ export default function HomeScreen() {
     const [rollNumber, setRollNumber] = useState<string | null>(null);
     const [attendance, setAttendance] = useState<Attendance | null>(null);
     const [midmarks, setMidmarks] = useState<Midmarks | null>(null);
+    const [rankData, setRankData] = useState<RankResponse | null>(null);
+    const [rankContext, setRankContext] = useState<'college' | 'year' | 'branch' | 'section'>('college');
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [attendanceError, setAttendanceError] = useState("");
@@ -362,6 +498,17 @@ export default function HomeScreen() {
                 const errorMessage = midmarksResult.reason?.message || "Midmarks data unavailable";
                 setMidmarksError(errorMessage);
             }
+
+            // Fetch Rank independently since it often changes with context
+            // We do this here for initial load, but also have separate effect for context change
+            try {
+                const rank = await withTimeout(getStudentRank(storedRollNo, rankContext), 10000);
+                setRankData(rank);
+            } catch (e) {
+                console.error("Failed to fetch rank:", e);
+                // Non-critical, just don't show rank
+            }
+
         } catch (err) {
             console.error("Failed to load data:", err);
         } finally {
@@ -369,6 +516,15 @@ export default function HomeScreen() {
             setRefreshing(false);
         }
     }, []);
+
+    // Effect to fetch rank when context changes
+    useEffect(() => {
+        if (rollNumber) {
+            getStudentRank(rollNumber, rankContext)
+                .then(setRankData)
+                .catch(e => console.error("Failed to update rank context:", e));
+        }
+    }, [rankContext, rollNumber]);
 
     useEffect(() => {
         fetchData();
@@ -435,6 +591,14 @@ export default function HomeScreen() {
                         </View>
                     )}
                 </View>
+
+                {/* Rank Card */}
+                {/* We don't show error card for rank - just hide if failed */}
+                <RankCard
+                    rankData={rankData}
+                    context={rankContext}
+                    onContextChange={setRankContext}
+                />
 
                 {/* Attendance Card or Error */}
                 {attendanceError ? (
@@ -760,5 +924,165 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: '#52525B',
         marginTop: 2,
+    },
+
+    // Rank Card Styles
+    rankCardContent: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    rankInfo: {
+        flex: 1,
+    },
+    rankLabel: {
+        fontFamily: 'Inter_600SemiBold',
+        fontSize: 11,
+        color: '#A1A1AA',
+        letterSpacing: 1,
+        marginBottom: 4,
+    },
+    rankValueContainer: {
+        flexDirection: 'row',
+        alignItems: 'baseline',
+    },
+    rankPrefix: {
+        fontFamily: 'Inter_500Medium',
+        fontSize: 20,
+        color: '#A78BFA',
+        marginRight: 2,
+    },
+    rankValue: {
+        fontFamily: 'Inter_800ExtraBold',
+        fontSize: 32,
+        color: '#FFFFFF',
+    },
+    rankTotal: {
+        fontFamily: 'Inter_500Medium',
+        fontSize: 14,
+        color: '#52525B',
+        marginLeft: 4,
+    },
+    rankSubtext: {
+        fontFamily: 'Inter_400Regular',
+        fontSize: 12,
+        color: '#52525B',
+        marginTop: 4,
+    },
+    contextContainer: {
+        position: 'relative',
+        zIndex: 10, // Ensure dropdown allows interaction
+    },
+    contextButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+    },
+    contextButtonText: {
+        fontFamily: 'Inter_500Medium',
+        fontSize: 13,
+        color: '#FFFFFF',
+        marginRight: 6,
+    },
+    contextMenu: {
+        position: 'absolute',
+        top: '100%',
+        right: 0,
+        marginTop: 8,
+        width: 140,
+        backgroundColor: '#18181B',
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        padding: 4,
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 4,
+        },
+        shadowOpacity: 0.3,
+        shadowRadius: 4.65,
+        elevation: 8,
+        zIndex: 50,
+    },
+    contextMenuItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: 10,
+        paddingHorizontal: 12,
+        borderRadius: 8,
+    },
+    contextMenuItemActive: {
+        backgroundColor: 'rgba(124, 58, 237, 0.2)',
+    },
+    contextMenuText: {
+        fontFamily: 'Inter_500Medium',
+        fontSize: 13,
+        color: '#A1A1AA',
+    },
+    contextMenuTextActive: {
+        color: '#FFFFFF',
+        fontFamily: 'Inter_600SemiBold',
+    },
+
+    // Modal styles
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContainer: {
+        width: '80%',
+        borderRadius: 24,
+        overflow: 'hidden',
+    },
+    modalBorder: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        borderRadius: 24,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+    },
+    modalContent: {
+        padding: 24,
+    },
+    modalTitle: {
+        fontFamily: 'Inter_600SemiBold',
+        fontSize: 18,
+        color: '#FFFFFF',
+        marginBottom: 20,
+        textAlign: 'center',
+    },
+    modalOption: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+        borderRadius: 12,
+        marginBottom: 6,
+        overflow: 'hidden',
+    },
+    modalOptionSelected: {
+        backgroundColor: 'rgba(124, 58, 237, 0.1)',
+    },
+    modalOptionText: {
+        fontFamily: 'Inter_500Medium',
+        fontSize: 15,
+        color: '#A1A1AA',
+    },
+    modalOptionTextSelected: {
+        fontFamily: 'Inter_600SemiBold',
+        color: '#FFFFFF',
     },
 });

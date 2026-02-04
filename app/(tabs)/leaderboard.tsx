@@ -2,11 +2,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useRef, useState } from "react";
+
 import {
     ActivityIndicator,
     Animated,
     FlatList,
+    Modal,
     RefreshControl,
+    ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -14,9 +17,218 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Skeleton } from "../../components/Skeleton";
+import { BRANCHES } from "../../constants";
 import { getLeaderboard } from "../../services/api";
 import { getRollNumber } from "../../services/storage";
 import type { LeaderboardEntry, LeaderboardParams } from "../../types";
+
+// Filter options
+const YEAR_OPTIONS = [
+    { label: "All Years", value: "all" },
+    { label: "1st Year", value: "12" },
+    { label: "2nd Year", value: "22" },
+    { label: "3rd Year", value: "32" },
+    { label: "4th Year", value: "42" },
+];
+
+
+const BRANCH_OPTIONS = [
+    { label: "All Branches", value: "all" },
+    ...Object.entries(BRANCHES).map(([id, name]) => ({
+        label: name,
+        value: id,
+    })),
+];
+
+const SECTION_OPTIONS = [
+    { label: "All Sections", value: "all" },
+    { label: "-", value: "-" },
+    ...Array.from({ length: 10 }, (_, i) => String.fromCharCode(65 + i)).map(
+        (char) => ({ label: `Section ${char}`, value: char })
+    ),
+];
+
+// Filter Chip Component
+function FilterChip({
+    label,
+    value,
+    isActive,
+    onPress,
+}: {
+    label: string;
+    value: string;
+    isActive: boolean;
+    onPress: () => void;
+}) {
+    const getDisplayText = () => {
+        if (value === "all") return label;
+        if (label === "Branch") {
+            // For branches, if value is numeric ID, try to find name, else show value
+            const branch = BRANCH_OPTIONS.find(b => b.value === value);
+            return branch ? branch.label : value;
+        }
+        if (label === "Year") {
+            // Map 12->1st, 22->2nd etc
+            if (value === "12") return "1st Yr";
+            if (value === "22") return "2nd Yr";
+            if (value === "32") return "3rd Yr";
+            if (value === "42") return "4th Yr";
+            return value;
+        }
+        return value;
+    };
+
+    return (
+        <TouchableOpacity
+            onPress={onPress}
+            activeOpacity={0.7}
+            style={styles.filterChip}
+        >
+            {isActive && (
+                <LinearGradient
+                    colors={['#7C3AED', '#5B21B6']}
+                    style={StyleSheet.absoluteFill}
+                />
+            )}
+            <BlurView
+                intensity={isActive ? 0 : 20}
+                tint="dark"
+                style={StyleSheet.absoluteFill}
+            />
+            <View style={[styles.filterChipBorder, isActive && styles.filterChipBorderActive]} />
+            <View style={styles.filterChipContent}>
+                <Text style={[styles.filterChipText, isActive && styles.filterChipTextActive]}>
+                    {getDisplayText()}
+                </Text>
+                <Ionicons
+                    name="chevron-down"
+                    size={14}
+                    color={isActive ? "#fff" : "#71717A"}
+                    style={{ marginLeft: 4 }}
+                />
+            </View>
+        </TouchableOpacity>
+    );
+}
+
+// Filter Modal Component
+function FilterModal({
+    visible,
+    title,
+    options,
+    selectedValue,
+    onSelect,
+    onClose,
+}: {
+    visible: boolean;
+    title: string;
+    options: { label: string; value: string }[];
+    selectedValue: string;
+    onSelect: (value: string) => void;
+    onClose: () => void;
+}) {
+    return (
+        <Modal
+            visible={visible}
+            transparent
+            animationType="fade"
+            onRequestClose={onClose}
+        >
+            <TouchableOpacity
+                style={styles.modalOverlay}
+                activeOpacity={1}
+                onPress={onClose}
+            >
+                <View style={styles.modalContainer}>
+                    <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />
+                    <View style={styles.modalBorder} />
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>{title}</Text>
+                        <ScrollView style={styles.modalOptions}>
+                            {options.map((option) => (
+                                <TouchableOpacity
+                                    key={option.value}
+                                    style={[
+                                        styles.modalOption,
+                                        selectedValue === option.value && styles.modalOptionSelected,
+                                    ]}
+                                    onPress={() => {
+                                        onSelect(option.value);
+                                        onClose();
+                                    }}
+                                >
+                                    {selectedValue === option.value && (
+                                        <LinearGradient
+                                            colors={['rgba(124, 58, 237, 0.3)', 'rgba(124, 58, 237, 0.1)']}
+                                            style={StyleSheet.absoluteFill}
+                                        />
+                                    )}
+                                    <Text style={[
+                                        styles.modalOptionText,
+                                        selectedValue === option.value && styles.modalOptionTextSelected,
+                                    ]}>
+                                        {option.label}
+                                    </Text>
+                                    {selectedValue === option.value && (
+                                        <Ionicons name="checkmark" size={20} color="#7C3AED" />
+                                    )}
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                    </View>
+                </View>
+            </TouchableOpacity>
+        </Modal>
+    );
+}
+
+// Filter Bar Component
+function FilterBar({
+    year,
+    branch,
+    section,
+    onYearPress,
+    onBranchPress,
+    onSectionPress,
+}: {
+    year: string;
+    branch: string;
+    section: string;
+    onYearPress: () => void;
+    onBranchPress: () => void;
+    onSectionPress: () => void;
+}) {
+    return (
+        <View style={styles.filterBar}>
+            <View style={styles.filterBarContent}>
+                <View style={{ flex: 1 }}>
+                    <FilterChip
+                        label="Year"
+                        value={year}
+                        isActive={year !== "all"}
+                        onPress={onYearPress}
+                    />
+                </View>
+                <View style={{ flex: 1 }}>
+                    <FilterChip
+                        label="Branch"
+                        value={branch}
+                        isActive={branch !== "all"}
+                        onPress={onBranchPress}
+                    />
+                </View>
+                <View style={{ flex: 1 }}>
+                    <FilterChip
+                        label="Section"
+                        value={section}
+                        isActive={section !== "all"}
+                        onPress={onSectionPress}
+                    />
+                </View>
+            </View>
+        </View>
+    );
+}
 
 // Enhanced Rank Badge with animations and premium styling
 function RankBadge({ rank }: { rank: number }) {
@@ -326,6 +538,14 @@ export default function LeaderboardScreen() {
     const [loadingMore, setLoadingMore] = useState(false);
     const pageRef = useRef(1);
 
+    // Filter states
+    const [year, setYear] = useState("all");
+    const [branch, setBranch] = useState("all");
+    const [section, setSection] = useState("all");
+    const [yearModalVisible, setYearModalVisible] = useState(false);
+    const [branchModalVisible, setBranchModalVisible] = useState(false);
+    const [sectionModalVisible, setSectionModalVisible] = useState(false);
+
     const fetchData = useCallback(
         async (reset = false) => {
             // Prevent duplicate requests
@@ -346,6 +566,9 @@ export default function LeaderboardScreen() {
                     page: pageRef.current,
                     limit: 50,
                     sort: sortBy,
+                    year: year !== "all" ? year : undefined,
+                    branch: branch !== "all" ? branch : undefined,
+                    section: section !== "all" ? section : undefined,
                 };
 
                 const response = await getLeaderboard(params);
@@ -371,13 +594,13 @@ export default function LeaderboardScreen() {
                 setLoadingMore(false);
             }
         },
-        [sortBy, loadingMore]
+        [sortBy, loadingMore, year, branch, section]
     );
 
     useEffect(() => {
         pageRef.current = 1;
         fetchData(true);
-    }, [sortBy]);
+    }, [sortBy, year, branch, section]);
 
     const onRefresh = useCallback(() => {
         setRefreshing(true);
@@ -469,6 +692,16 @@ export default function LeaderboardScreen() {
                 {/* Toggle Button */}
                 <ToggleButton sortBy={sortBy} onToggle={setSortBy} />
 
+                {/* Filter Bar */}
+                <FilterBar
+                    year={year}
+                    branch={branch}
+                    section={section}
+                    onYearPress={() => setYearModalVisible(true)}
+                    onBranchPress={() => setBranchModalVisible(true)}
+                    onSectionPress={() => setSectionModalVisible(true)}
+                />
+
                 {/* Leaderboard List */}
                 <FlatList
                     data={data}
@@ -514,6 +747,32 @@ export default function LeaderboardScreen() {
                             </Text>
                         </View>
                     }
+                />
+
+                {/* Filter Modals */}
+                <FilterModal
+                    visible={yearModalVisible}
+                    title="Select Year"
+                    options={YEAR_OPTIONS}
+                    selectedValue={year}
+                    onSelect={setYear}
+                    onClose={() => setYearModalVisible(false)}
+                />
+                <FilterModal
+                    visible={branchModalVisible}
+                    title="Select Branch"
+                    options={BRANCH_OPTIONS}
+                    selectedValue={branch}
+                    onSelect={setBranch}
+                    onClose={() => setBranchModalVisible(false)}
+                />
+                <FilterModal
+                    visible={sectionModalVisible}
+                    title="Select Section"
+                    options={SECTION_OPTIONS}
+                    selectedValue={section}
+                    onSelect={setSection}
+                    onClose={() => setSectionModalVisible(false)}
                 />
             </SafeAreaView>
         </View>
@@ -840,5 +1099,110 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(255, 255, 255, 0.03)',
         borderRadius: 18,
         padding: 14,
+    },
+
+    // Filter styles
+    filterBar: {
+        marginBottom: 12,
+    },
+    filterBarContent: {
+        flexDirection: 'row',
+        paddingHorizontal: 16,
+        gap: 8,
+    },
+    filterChip: {
+        borderRadius: 12,
+        overflow: 'hidden',
+        height: 48,
+        width: '100%',
+    },
+    filterChipBorder: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.08)',
+    },
+    filterChipBorderActive: {
+        borderColor: 'rgba(124, 58, 237, 0.5)',
+    },
+    filterChipContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100%',
+        paddingHorizontal: 4,
+    },
+    filterChipText: {
+        fontFamily: 'Inter_500Medium',
+        fontSize: 12,
+        color: '#A1A1AA',
+        textAlign: 'center',
+    },
+    filterChipTextActive: {
+        fontFamily: 'Inter_600SemiBold',
+        color: '#FFFFFF',
+    },
+
+    // Modal styles
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContainer: {
+        width: '85%',
+        maxHeight: '60%',
+        borderRadius: 24,
+        overflow: 'hidden',
+    },
+    modalBorder: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        borderRadius: 24,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+    },
+    modalContent: {
+        padding: 20,
+    },
+    modalTitle: {
+        fontFamily: 'Inter_600SemiBold',
+        fontSize: 18,
+        color: '#FFFFFF',
+        marginBottom: 16,
+        textAlign: 'center',
+    },
+    modalOptions: {
+        maxHeight: 300,
+    },
+    modalOption: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+        borderRadius: 12,
+        marginBottom: 4,
+        overflow: 'hidden',
+    },
+    modalOptionSelected: {
+        backgroundColor: 'rgba(124, 58, 237, 0.1)',
+    },
+    modalOptionText: {
+        fontFamily: 'Inter_500Medium',
+        fontSize: 15,
+        color: '#A1A1AA',
+    },
+    modalOptionTextSelected: {
+        fontFamily: 'Inter_600SemiBold',
+        color: '#FFFFFF',
     },
 });

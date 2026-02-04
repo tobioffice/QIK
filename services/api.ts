@@ -172,3 +172,16 @@ export function isValidRollNumber(rollNumber: string): boolean {
     const rollRegex = /^\d{2}[a-zA-Z]{2}[a-zA-Z0-9]{6}$/;
     return rollRegex.test(rollNumber);
 }
+
+export interface RankResponse {
+    rank: number;
+    totalStudents: number;
+    attendance: number;
+}
+
+export async function getStudentRank(
+    rollNumber: string,
+    context: 'college' | 'year' | 'branch' | 'section'
+): Promise<RankResponse> {
+    return fetchApi<RankResponse>(`/statistics/rank/${rollNumber}?context=${context}`);
+}
