@@ -119,7 +119,7 @@ function CircularProgress({
             {/* Center content */}
             <View style={styles.circularCenter}>
                 <Text style={[styles.percentageText, { color: colors.start }]}>
-                    {percentage.toFixed(0)}
+                    {percentage.toFixed(2)}
                 </Text>
                 <Text style={styles.percentLabel}>percent</Text>
             </View>
