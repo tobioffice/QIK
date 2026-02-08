@@ -128,15 +128,15 @@ export async function getUserDetails(rollNumber: string): Promise<Student> {
     return fetchApi<Student>(`/user/${rollNumber}`);
 }
 
-export async function syncUser(rollNumber: string): Promise<{ user_id: string; roll_no: string }> {
-    return fetchApi<{ user_id: string; roll_no: string }>('/user/sync', {
+export async function syncUser(rollNumber: string): Promise<{ email: string; rollNo: string }> {
+    return fetchApi<{ email: string; rollNo: string }>('/user/sync', {
         method: 'POST',
         body: JSON.stringify({ rollNumber }),
     });
 }
 
-export async function getMyProfile(): Promise<{ user_id: string; roll_no: string }> {
-    return fetchApi<{ user_id: string; roll_no: string }>('/user/me');
+export async function getMyProfile(): Promise<{ email: string; rollNo: string }> {
+    return fetchApi<{ email: string; rollNo: string }>('/user/me');
 }
 
 // Academic endpoints

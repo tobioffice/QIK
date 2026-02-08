@@ -1,6 +1,6 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { getMyProfile } from "../services/api";
 import { getRollNumber, saveRollNumber } from "../services/storage";
@@ -8,7 +8,7 @@ import { getRollNumber, saveRollNumber } from "../services/storage";
 export default function Index() {
   const { isSignedIn, isLoaded } = useAuth();
   const router = useRouter();
-  const [checking, setChecking] = useState(true);
+  const [destination, setDestination] = useState<string | null>(null);
   const hasNavigated = useRef(false);
 
   useEffect(() => {
@@ -16,13 +16,12 @@ export default function Index() {
       // Wait for Clerk to fully load
       if (!isLoaded) return;
 
-      // Prevent multiple navigations
-      if (hasNavigated.current) return;
+      // Already determined destination, don't check again
+      if (destination) return;
 
       // If not signed in, redirect to sign-in
       if (isSignedIn === false) {
-        hasNavigated.current = true;
-        router.replace("/sign-in");
+        setDestination("/sign-in");
         return;
       }
 
@@ -34,8 +33,9 @@ export default function Index() {
         if (!rollNumber) {
           try {
             const profile = await getMyProfile();
-            if (profile && profile.roll_no) {
-              rollNumber = profile.roll_no;
+            console.log("Profile:", profile);
+            if (profile && profile.rollNo) {
+              rollNumber = profile.rollNo;
               await saveRollNumber(rollNumber);
             }
           } catch (e) {
@@ -43,19 +43,29 @@ export default function Index() {
           }
         }
 
-        hasNavigated.current = true;
         if (!rollNumber) {
-          router.replace("/onboarding");
+          setDestination("/onboarding");
         } else {
-          router.replace("/(tabs)");
+          setDestination("/(tabs)");
         }
       }
-
-      setChecking(false);
     }
 
     checkNavigation();
-  }, [isLoaded, isSignedIn]);
+  }, [isLoaded, isSignedIn, destination]);
+
+  // Use useLayoutEffect for navigation to ensure it happens synchronously
+  // before the screen renders, which is more reliable in production builds
+  useLayoutEffect(() => {
+    if (destination && !hasNavigated.current) {
+      hasNavigated.current = true;
+      // Use setTimeout to ensure navigation happens after the current render cycle
+      const timer = setTimeout(() => {
+        router.replace(destination as any);
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [destination, router]);
 
   return (
     <View className="flex-1 items-center justify-center bg-background">
@@ -63,3 +73,4 @@ export default function Index() {
     </View>
   );
 }
+

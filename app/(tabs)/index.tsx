@@ -527,6 +527,7 @@ export default function HomeScreen() {
     }, [rankContext, rollNumber]);
 
     useEffect(() => {
+        console.log("HomeScreen mounted, calling fetchData...");
         fetchData();
     }, [fetchData]);
 

@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -18,7 +17,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { getUserDetails, isValidRollNumber, syncUser } from "../services/api";
-import { saveRollNumber } from "../services/storage";
+import { getRollNumber, saveRollNumber } from "../services/storage";
 
 export default function Onboarding() {
     const router = useRouter();
@@ -26,35 +25,18 @@ export default function Onboarding() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [isFocused, setIsFocused] = useState(false);
+    const [isNavigating, setIsNavigating] = useState(false);
 
-    // Animations
-    const headerAnim = useRef(new Animated.Value(0)).current;
-    const cardAnim = useRef(new Animated.Value(0)).current;
-    const buttonAnim = useRef(new Animated.Value(0)).current;
+    // Simple fade animation
+    const fadeAnim = useRef(new Animated.Value(0)).current;
     const shakeAnim = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
-        // Staggered entrance animation
-        Animated.stagger(150, [
-            Animated.spring(headerAnim, {
-                toValue: 1,
-                useNativeDriver: true,
-                tension: 50,
-                friction: 8,
-            }),
-            Animated.spring(cardAnim, {
-                toValue: 1,
-                useNativeDriver: true,
-                tension: 50,
-                friction: 8,
-            }),
-            Animated.spring(buttonAnim, {
-                toValue: 1,
-                useNativeDriver: true,
-                tension: 50,
-                friction: 8,
-            }),
-        ]).start();
+        Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+        }).start();
     }, []);
 
     const shakeError = () => {
@@ -66,7 +48,26 @@ export default function Onboarding() {
         ]).start();
     };
 
+    const navigateToHome = async () => {
+        // Double-check roll number is saved before navigating
+        const savedRoll = await getRollNumber();
+        console.log("Navigating to home, saved roll:", savedRoll);
+
+        if (savedRoll) {
+            setIsNavigating(true);
+            // Use a small delay to ensure state is settled
+            setTimeout(() => {
+                router.replace("/(tabs)");
+            }, 100);
+        } else {
+            setError("Failed to save roll number. Please try again.");
+            setLoading(false);
+        }
+    };
+
     const handleSubmit = async () => {
+        Keyboard.dismiss();
+
         const trimmed = rollNumber.trim().toUpperCase();
 
         if (!trimmed) {
@@ -85,19 +86,26 @@ export default function Onboarding() {
         setError("");
 
         try {
+            // Validate roll number exists
             await getUserDetails(trimmed);
+
+            // Save roll number locally
             await saveRollNumber(trimmed);
-            // Sync roll number with backend to persist across devices
-            try {
-                await syncUser(trimmed);
-            } catch (syncError) {
+            console.log("Roll number saved successfully:", trimmed);
+
+            // Sync with backend (non-blocking)
+            syncUser(trimmed).catch((syncError) => {
                 console.error("Failed to sync user:", syncError);
-                // Continue anyway - functionality works locally
-            }
-            router.replace("/(tabs)");
+            });
+
+            // Navigate to home
+            await navigateToHome();
+
         } catch (err: any) {
             console.error("Onboarding error:", err);
+            setLoading(false);
             shakeError();
+
             if (err.status === 404) {
                 setError("Roll number not found in system");
             } else if (err.message) {
@@ -105,10 +113,20 @@ export default function Onboarding() {
             } else {
                 setError("Something went wrong. Please try again.");
             }
-        } finally {
-            setLoading(false);
         }
     };
+
+    // Show loading screen while navigating
+    if (isNavigating) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#7C3AED" />
+                    <Text style={styles.loadingText}>Loading your dashboard...</Text>
+                </View>
+            </SafeAreaView>
+        );
+    }
 
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -117,79 +135,39 @@ export default function Onboarding() {
                     behavior={Platform.OS === "ios" ? "padding" : "height"}
                     style={styles.keyboardView}
                 >
-                    {/* Background gradient orbs */}
-                    <View style={styles.gradientOrb1} />
-                    <View style={styles.gradientOrb2} />
-                    <View style={styles.gradientOrb3} />
+                    {/* Background decorations */}
+                    <View style={styles.bgCircle1} />
+                    <View style={styles.bgCircle2} />
 
-                    <View style={styles.content}>
+                    <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
                         {/* Header */}
-                        <Animated.View
-                            style={[
-                                styles.headerContainer,
-                                {
-                                    opacity: headerAnim,
-                                    transform: [{
-                                        translateY: headerAnim.interpolate({
-                                            inputRange: [0, 1],
-                                            outputRange: [-30, 0],
-                                        })
-                                    }]
-                                }
-                            ]}
-                        >
-                            {/* Icon with glow */}
-                            <View style={styles.iconContainer}>
-                                <View style={styles.iconGlow} />
-                                <LinearGradient
-                                    colors={['#7C3AED', '#5B21B6']}
-                                    style={styles.iconBadge}
-                                >
-                                    <Text style={styles.iconEmoji}>🎓</Text>
-                                </LinearGradient>
-                            </View>
+                        <View style={styles.headerContainer}>
+                            <LinearGradient
+                                colors={['#7C3AED', '#5B21B6']}
+                                style={styles.iconBadge}
+                            >
+                                <Text style={styles.iconEmoji}>🎓</Text>
+                            </LinearGradient>
 
-                            <Text style={styles.headerTitle}>
-                                Enter Roll Number
-                            </Text>
+                            <Text style={styles.headerTitle}>Welcome to QIK</Text>
                             <Text style={styles.headerSubtitle}>
-                                We'll fetch your attendance and marks
+                                Enter your roll number to get started
                             </Text>
-                        </Animated.View>
+                        </View>
 
                         {/* Input Card */}
                         <Animated.View
                             style={[
                                 styles.cardContainer,
-                                {
-                                    opacity: cardAnim,
-                                    transform: [
-                                        {
-                                            translateY: cardAnim.interpolate({
-                                                inputRange: [0, 1],
-                                                outputRange: [30, 0],
-                                            })
-                                        },
-                                        { translateX: shakeAnim }
-                                    ]
-                                }
+                                { transform: [{ translateX: shakeAnim }] }
                             ]}
                         >
-                            <BlurView intensity={25} tint="dark" style={StyleSheet.absoluteFill} />
-                            <LinearGradient
-                                colors={['rgba(30, 30, 50, 0.85)', 'rgba(20, 20, 35, 0.95)']}
-                                style={StyleSheet.absoluteFill}
-                            />
-                            <View style={styles.glassBorder} />
-
                             <View style={styles.cardContent}>
-                                {/* Label */}
                                 <View style={styles.labelRow}>
                                     <Ionicons name="school-outline" size={18} color="#A1A1AA" />
                                     <Text style={styles.inputLabel}>Roll Number</Text>
                                 </View>
 
-                                {/* Input */}
                                 <View style={[
                                     styles.inputContainer,
                                     isFocused && styles.inputFocused,
@@ -209,10 +187,10 @@ export default function Onboarding() {
                                         autoCorrect={false}
                                         style={styles.textInput}
                                         maxLength={12}
+                                        editable={!loading}
                                     />
                                 </View>
 
-                                {/* Error message */}
                                 {error ? (
                                     <View style={styles.errorContainer}>
                                         <Ionicons name="alert-circle" size={16} color="#EF4444" />
@@ -220,58 +198,44 @@ export default function Onboarding() {
                                     </View>
                                 ) : (
                                     <Text style={styles.hintText}>
-                                        Format: YYBranchRollNo
+                                        Format: YYBranchRollNo (e.g., 21BQ1A0501)
                                     </Text>
                                 )}
                             </View>
                         </Animated.View>
 
                         {/* Submit Button */}
-                        <Animated.View
-                            style={{
-                                opacity: buttonAnim,
-                                transform: [{
-                                    translateY: buttonAnim.interpolate({
-                                        inputRange: [0, 1],
-                                        outputRange: [30, 0],
-                                    })
-                                }]
-                            }}
+                        <TouchableOpacity
+                            onPress={handleSubmit}
+                            disabled={loading}
+                            activeOpacity={0.85}
+                            style={styles.buttonWrapper}
                         >
-                            <TouchableOpacity
-                                onPress={handleSubmit}
-                                disabled={loading}
-                                activeOpacity={0.85}
-                                style={styles.buttonWrapper}
+                            <LinearGradient
+                                colors={loading ? ['#52525B', '#3F3F46'] : ['#7C3AED', '#5B21B6']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 0 }}
+                                style={styles.button}
                             >
-                                <LinearGradient
-                                    colors={loading ? ['#52525B', '#3F3F46'] : ['#7C3AED', '#5B21B6']}
-                                    start={{ x: 0, y: 0 }}
-                                    end={{ x: 1, y: 0 }}
-                                    style={[styles.button, !loading && styles.buttonGlow]}
-                                >
-                                    {loading ? (
-                                        <ActivityIndicator color="white" size="small" />
-                                    ) : (
-                                        <View style={styles.buttonContent}>
-                                            <Text style={styles.buttonText}>Continue</Text>
-                                            <Ionicons name="arrow-forward" size={20} color="white" />
-                                        </View>
-                                    )}
-                                </LinearGradient>
-                            </TouchableOpacity>
-                        </Animated.View>
+                                {loading ? (
+                                    <ActivityIndicator color="white" size="small" />
+                                ) : (
+                                    <View style={styles.buttonContent}>
+                                        <Text style={styles.buttonText}>Continue</Text>
+                                        <Ionicons name="arrow-forward" size={20} color="white" />
+                                    </View>
+                                )}
+                            </LinearGradient>
+                        </TouchableOpacity>
 
-                        {/* Footer info */}
-                        <Animated.View style={{ opacity: buttonAnim }}>
-                            <View style={styles.footerInfo}>
-                                <Ionicons name="shield-checkmark-outline" size={16} color="#52525B" />
-                                <Text style={styles.footerText}>
-                                    Your data is securely stored on your device
-                                </Text>
-                            </View>
-                        </Animated.View>
-                    </View>
+                        {/* Footer */}
+                        <View style={styles.footerInfo}>
+                            <Ionicons name="shield-checkmark-outline" size={16} color="#52525B" />
+                            <Text style={styles.footerText}>
+                                Your data is securely stored on your device
+                            </Text>
+                        </View>
+                    </Animated.View>
                 </KeyboardAvoidingView>
             </SafeAreaView>
         </TouchableWithoutFeedback>
@@ -291,34 +255,36 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         paddingHorizontal: 24,
     },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    loadingText: {
+        fontFamily: 'Inter_500Medium',
+        fontSize: 16,
+        color: '#A1A1AA',
+        marginTop: 16,
+    },
 
-    // Background orbs
-    gradientOrb1: {
+    // Background decorations
+    bgCircle1: {
         position: 'absolute',
-        top: 80,
-        left: -100,
-        width: 280,
-        height: 280,
-        borderRadius: 140,
+        top: 60,
+        left: -80,
+        width: 250,
+        height: 250,
+        borderRadius: 125,
         backgroundColor: 'rgba(124, 58, 237, 0.12)',
     },
-    gradientOrb2: {
+    bgCircle2: {
         position: 'absolute',
-        bottom: 150,
-        right: -100,
-        width: 220,
-        height: 220,
-        borderRadius: 110,
+        bottom: 100,
+        right: -60,
+        width: 180,
+        height: 180,
+        borderRadius: 90,
         backgroundColor: 'rgba(6, 182, 212, 0.08)',
-    },
-    gradientOrb3: {
-        position: 'absolute',
-        top: '40%',
-        right: -50,
-        width: 150,
-        height: 150,
-        borderRadius: 75,
-        backgroundColor: 'rgba(124, 58, 237, 0.06)',
     },
 
     // Header
@@ -326,25 +292,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 40,
     },
-    iconContainer: {
-        position: 'relative',
-        marginBottom: 24,
-    },
-    iconGlow: {
-        position: 'absolute',
-        top: -10,
-        left: -10,
-        right: -10,
-        bottom: -10,
-        borderRadius: 50,
-        backgroundColor: 'rgba(124, 58, 237, 0.25)',
-    },
     iconBadge: {
         width: 80,
         height: 80,
         borderRadius: 28,
         alignItems: 'center',
         justifyContent: 'center',
+        marginBottom: 24,
     },
     iconEmoji: {
         fontSize: 40,
@@ -364,15 +318,11 @@ const styles = StyleSheet.create({
 
     // Card
     cardContainer: {
-        borderRadius: 24,
-        overflow: 'hidden',
-        marginBottom: 20,
-    },
-    glassBorder: {
-        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(30, 30, 50, 0.9)',
         borderRadius: 24,
         borderWidth: 1,
         borderColor: 'rgba(255, 255, 255, 0.08)',
+        marginBottom: 20,
     },
     cardContent: {
         padding: 24,
@@ -438,13 +388,6 @@ const styles = StyleSheet.create({
         paddingVertical: 18,
         alignItems: 'center',
         justifyContent: 'center',
-    },
-    buttonGlow: {
-        shadowColor: '#7C3AED',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.4,
-        shadowRadius: 16,
-        elevation: 10,
     },
     buttonContent: {
         flexDirection: 'row',

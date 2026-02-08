@@ -39,7 +39,11 @@ function AuthInitializer({ children }: { children: React.ReactNode }) {
   }, [getToken]);
 
   if (!isReady) {
-    return null;
+    return (
+      <View className="flex-1 items-center justify-center bg-background">
+        <ActivityIndicator size="large" color="#6C63FF" />
+      </View>
+    );
   }
 
   return <>{children}</>;

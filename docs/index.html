@@ -4,74 +4,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QIK - The Ultimate Campus Companion</title>
+
+    <!-- Primary Meta Tags -->
+    <title>QIK - The Ultimate Campus Companion for NBKRIST Students</title>
+    <meta name="title" content="QIK - The Ultimate Campus Companion for NBKRIST Students">
     <meta name="description"
-        content="Your all-in-one companion for N.B.K.R. Institute. Track attendance, view mid-marks, access study notes, and get real-time college updates instantly.">
-    <script src="https://cdn.tailwindcss.com"></script>
+        content="Track attendance, view mid-marks, check leaderboard rankings, and access study resources instantly. The all-in-one app for N.B.K.R. Institute students.">
+    <meta name="keywords"
+        content="NBKRIST, NBKR, attendance tracker, mid marks, college app, student app, campus companion, N.B.K.R. Institute, Vidyanagar, engineering college">
+    <meta name="author" content="Murali Aggipothu">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://qik.tobioffice.dev/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://qik.tobioffice.dev/">
+    <meta property="og:title" content="QIK - The Ultimate Campus Companion for NBKRIST">
+    <meta property="og:description"
+        content="Track attendance, view mid-marks, check leaderboard rankings, and access study resources instantly. Built for N.B.K.R. Institute students.">
+    <meta property="og:image" content="https://qik.tobioffice.dev/og-image.png">
+    <meta property="og:locale" content="en_IN">
+    <meta property="og:site_name" content="QIK App">
+    <link rel="icon" href="https://qik.tobioffice.dev/og-image.png" type="image/x-icon">
+
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://qik.tobioffice.dev/">
+    <meta name="twitter:title" content="QIK - The Ultimate Campus Companion for NBKRIST">
+    <meta name="twitter:description"
+        content="Track attendance, view mid-marks, check leaderboard rankings, and access study resources instantly.">
+    <meta name="twitter:image" content="https://qik.tobioffice.dev/og-image.png">
+
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- Fonts & Styles -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Outfit', 'sans-serif'],
-                    },
-                    colors: {
-                        brand: {
-                            50: '#eff6ff',
-                            100: '#dbeafe',
-                            200: '#bfdbfe',
-                            300: '#93c5fd',
-                            400: '#60a5fa',
-                            500: '#3b82f6',
-                            600: '#2563eb',
-                            700: '#1d4ed8',
-                            800: '#1e40af',
-                            900: '#1e3a8a',
-                            950: '#172554',
-                        }
-                    },
-                    animation: {
-                        'blob': 'blob 7s infinite',
-                        'float': 'float 3s ease-in-out infinite',
-                    },
-                    keyframes: {
-                        blob: {
-                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
-                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
-                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
-                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
-                        },
-                        float: {
-                            '0%, 100%': { transform: 'translateY(0)' },
-                            '50%': { transform: 'translateY(-10px)' },
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body {
-            font-family: 'Outfit', sans-serif;
-        }
-
-        .glass-nav {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .glass-card {
-            background: rgba(255, 255, 255, 0.6);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 
 <body class="bg-slate-50 text-slate-900 antialiased selection:bg-brand-500 selection:text-white overflow-x-hidden">
@@ -105,7 +79,7 @@
                         class="text-slate-600 hover:text-brand-600 transition-colors font-medium text-sm">About</a>
                     <a href="mailto:muraliaggipothu@gmail.com"
                         class="text-slate-600 hover:text-brand-600 transition-colors font-medium text-sm">Contact</a>
-                    <a href="https://github.com/tobioffice/QIK/releases/download/first/application-0bbc94e7-1c72-4d15-8bf9-e7ede81a3899.apk"
+                    <a href="https://github.com/tobioffice/QIK/releases/download/first/qik.size.optimized.apk"
                         class="inline-flex items-center justify-center px-6 py-2.5 border border-transparent text-sm font-semibold rounded-full text-white bg-brand-600 hover:bg-brand-700 hover:shadow-lg hover:shadow-brand-500/30 transition-all transform hover:-translate-y-0.5">
                         Download Now
                     </a>
@@ -133,7 +107,7 @@
             </p>
 
             <div class="flex flex-col sm:flex-row justify-center items-center gap-5">
-                <a href="https://github.com/tobioffice/QIK/releases/download/first/application-0bbc94e7-1c72-4d15-8bf9-e7ede81a3899.apk"
+                <a href="https://github.com/tobioffice/QIK/releases/download/first/qik.size.optimized.apk"
                     class="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white transition-all duration-200 bg-brand-600 font-pj rounded-2xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-600 hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-500/30">
                     <svg class="w-6 h-6 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

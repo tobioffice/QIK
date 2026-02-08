@@ -3,28 +3,77 @@ import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
+import * as Updates from "expo-updates";
 import * as WebBrowser from "expo-web-browser";
-import { useCallback } from "react";
-import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useCallback, useState } from "react";
+import { ActivityIndicator, Alert, Dimensions, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+
+import * as Linking from "expo-linking";
+import { useWarmUpBrowser } from "../hooks/useWarmUpBrowser";
 
 WebBrowser.maybeCompleteAuthSession();
 
 const { width, height } = Dimensions.get("window");
 
 export default function SignIn() {
+    useWarmUpBrowser();
+
     const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
     const router = useRouter();
+    const [isUpdating, setIsUpdating] = useState(false);
+
+    const onFetchUpdateAsync = async () => {
+        try {
+            setIsUpdating(true);
+            const update = await Updates.checkForUpdateAsync();
+
+            if (update.isAvailable) {
+                await Updates.fetchUpdateAsync();
+                await Updates.reloadAsync();
+            } else {
+                Alert.alert("No Updates", "You are already on the latest version.");
+            }
+        } catch (error) {
+            Alert.alert("Error", `Error fetching update: ${error}`);
+        } finally {
+            setIsUpdating(false);
+        }
+    };
 
     const onGoogleSignIn = useCallback(async () => {
         try {
-            const { createdSessionId, setActive } = await startOAuthFlow();
-            if (createdSessionId && setActive) {
+            const { createdSessionId, signIn, signUp, setActive } = await startOAuthFlow({
+                redirectUrl: Linking.createURL("oauth-redirect", { scheme: "qik" }),
+            });
+
+            if (createdSessionId) {
                 // Wait for the session to be set before navigating
-                await setActive({ session: createdSessionId });
+                setActive && await setActive({ session: createdSessionId });
                 router.replace("/");
+            } else {
+                // Use signIn or signUp for next steps such as MFA
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error("OAuth error:", err);
+
+            let title = "Authentication Failed";
+            let message = "An unexpected error occurred.";
+
+            if (err?.errors?.[0]?.message) {
+                // Handle Clerk API errors
+                message = err.errors[0].message;
+                if (err.errors[0].longMessage) {
+                    message += `\n\n${err.errors[0].longMessage}`;
+                }
+            } else if (err instanceof Error) {
+                message = err.message;
+            } else if (typeof err === "string") {
+                message = err;
+            } else {
+                message = JSON.stringify(err, null, 2);
+            }
+
+            Alert.alert(title, message, [{ text: "OK" }]);
         }
     }, [startOAuthFlow, router]);
 
@@ -60,7 +109,7 @@ export default function SignIn() {
                         style={{ fontFamily: 'Inter_400Regular' }}
                         className="text-text-secondary text-center text-base leading-6"
                     >
-                        Track your attendance, marks, and{'\n'}compete with your peers
+                        Track your attendance, marks, and{'\n'}compete with your peers.
                     </Text>
                 </View>
 
@@ -93,6 +142,21 @@ export default function SignIn() {
                             Continue with Google
                         </Text>
                     </View>
+                </TouchableOpacity>
+
+                {/* Manual Update Button */}
+                <TouchableOpacity
+                    onPress={onFetchUpdateAsync}
+                    disabled={isUpdating}
+                    className="items-center justify-center py-2"
+                >
+                    {isUpdating ? (
+                        <ActivityIndicator color="#6C63FF" />
+                    ) : (
+                        <Text className="text-text-muted text-xs">
+                            Check for Updates
+                        </Text>
+                    )}
                 </TouchableOpacity>
 
                 {/* Terms */}
