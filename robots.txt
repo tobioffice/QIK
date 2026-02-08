@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://qik.tobioffice.dev/sitemap.xml
