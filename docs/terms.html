@@ -5,43 +5,144 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Terms of Service - QIK App</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="icon" href="https://qik.tobioffice.dev/og-image.png" type="image/x-icon">
 
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: #111118;
+            --accent: #6366f1;
+            --text-primary: #f1f5f9;
+            --text-muted: #64748b;
+            --border: rgba(255, 255, 255, 0.06);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+            transition: opacity 0.2s;
+        }
+
+        .back-link:hover {
+            opacity: 0.7;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .date {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 3rem;
+        }
+
+        .content {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2.5rem;
+        }
+
+        section {
+            margin-bottom: 2.5rem;
+        }
+
+        section:last-child {
+            margin-bottom: 0;
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        p {
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        p:last-child {
+            margin-bottom: 0;
+        }
+
+        a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        footer {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 3rem;
+        }
+    </style>
 </head>
 
-<body class="bg-slate-50 text-slate-900 font-sans">
-
-    <div class="max-w-3xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
-        <a href="index.html"
-            class="inline-flex items-center text-sm font-medium text-brand-600 hover:text-brand-500 mb-8">
-            <svg class="mr-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18">
-                </path>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             Back to Home
         </a>
 
-        <h1 class="text-3xl font-extrabold text-slate-900 mb-8">Terms of Service</h1>
+        <h1>Terms of Service</h1>
+        <p class="date">Last updated: February 01, 2026</p>
 
-        <div class="bg-white shadow-sm rounded-2xl p-8 space-y-8">
-
+        <div class="content">
             <section>
-                <p class="text-slate-600">Last updated: February 01, 2026</p>
-                <p class="mt-4 text-slate-600">
+                <p>
                     Please read these Terms of Service ("Terms", "Terms of Service") carefully before using the QIK
                     mobile application (the "Service") operated by us.
                 </p>
-                <p class="mt-4 text-slate-600">
+                <p>
                     Your access to and use of the Service is conditioned on your acceptance of and compliance with these
                     Terms. These Terms apply to all visitors, users, and others who access or use the Service.
                 </p>
             </section>
 
             <section>
-                <h2 class="text-xl font-bold text-slate-900 mb-4">1. Accounts</h2>
-                <p class="text-slate-600">
+                <h2>1. Accounts</h2>
+                <p>
                     When you create an account with us, you must provide us information that is accurate, complete, and
                     current at all times. Failure to do so constitutes a breach of the Terms, which may result in
                     immediate termination of your account on our Service.
@@ -49,8 +150,8 @@
             </section>
 
             <section>
-                <h2 class="text-xl font-bold text-slate-900 mb-4">2. Usage of Service</h2>
-                <p class="text-slate-600">
+                <h2>2. Usage of Service</h2>
+                <p>
                     The QIK app is designed to help students track their academic data. You agree not to misuse the
                     Service or help anyone else to do so. You agree not to try to access the Service using a method
                     other than the interface and the instructions that we provide.
@@ -58,46 +159,41 @@
             </section>
 
             <section>
-                <h2 class="text-xl font-bold text-slate-900 mb-4">3. Intellectual Property</h2>
-                <p class="text-slate-600">
+                <h2>3. Intellectual Property</h2>
+                <p>
                     The Service and its original content, features, and functionality are and will remain the exclusive
                     property of the developers of QIK App and its licensors.
                 </p>
             </section>
 
             <section>
-                <h2 class="text-xl font-bold text-slate-900 mb-4">4. Links To Other Web Sites</h2>
-                <p class="text-slate-600">
+                <h2>4. Links To Other Web Sites</h2>
+                <p>
                     Our Service may contain links to third-party web sites or services that are not owned or controlled
-                    by us (e.g., college portals). We has no control over, and assumes no responsibility for, the
+                    by us (e.g., college portals). We have no control over, and assume no responsibility for, the
                     content, privacy policies, or practices of any third party web sites or services.
                 </p>
             </section>
 
             <section>
-                <h2 class="text-xl font-bold text-slate-900 mb-4">5. Termination</h2>
-                <p class="text-slate-600">
+                <h2>5. Termination</h2>
+                <p>
                     We may terminate or suspend access to our Service immediately, without prior notice or liability,
                     for any reason whatsoever, including without limitation if you breach the Terms.
                 </p>
             </section>
 
             <section>
-                <h2 class="text-xl font-bold text-slate-900 mb-4">6. Contact Us</h2>
-                <p class="text-slate-600">
-                    If you have any questions about these Terms, please contact us at <a
-                        href="mailto:muraliaggipothu@gmail.com"
-                        class="font-medium text-brand-600">muraliaggipothu@gmail.com</a>.
+                <h2>6. Contact Us</h2>
+                <p>
+                    If you have any questions about these Terms, please contact us at
+                    <a href="mailto:muraliaggipothu@gmail.com">muraliaggipothu@gmail.com</a>.
                 </p>
             </section>
-
         </div>
 
-        <footer class="mt-12 text-center text-slate-500 text-sm">
-            &copy; 2026 QIK App.
-        </footer>
+        <footer>© 2026 QIK App.</footer>
     </div>
-
 </body>
 
 </html>
