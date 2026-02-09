@@ -17,7 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Circle, Defs, Stop, LinearGradient as SvgGradient } from "react-native-svg";
 import { HomeLoadingSkeleton } from "../../components/HomeLoadingSkeleton";
 import { getAttendance, getMidmarks, getStudentRank, type RankResponse } from "../../services/api";
-import { getRollNumber } from "../../services/storage";
+import { getCachedAttendance, getCachedMidmarks, getCachedRank, getRollNumber, saveAttendanceToCache, saveMidmarksToCache, saveRankToCache } from "../../services/storage";
 import type { Attendance, Midmarks } from "../../types";
 
 // Glass Card Component with enhanced styling
@@ -119,7 +119,7 @@ function CircularProgress({
             {/* Center content */}
             <View style={styles.circularCenter}>
                 <Text style={[styles.percentageText, { color: colors.start }]}>
-                    {percentage.toFixed(2)}
+                    {percentage.toFixed(1)}
                 </Text>
                 <Text style={styles.percentLabel}>percent</Text>
             </View>
@@ -466,44 +466,82 @@ export default function HomeScreen() {
             setAttendanceError("");
             setMidmarksError("");
 
-            const [attendanceResult, midmarksResult] = await Promise.allSettled([
-                withTimeout(getAttendance(storedRollNo), 30000),
-                withTimeout(getMidmarks(storedRollNo), 30000),
-            ]);
+            // Check cache first for attendance and midmarks
+            const cachedAttendance = await getCachedAttendance();
+            const cachedMidmarks = await getCachedMidmarks();
 
-            if (attendanceResult.status === 'fulfilled') {
-                const data = attendanceResult.value;
-                if (data && typeof data.percentage === 'number' && data.totalClasses && data.subjects) {
-                    setAttendance(data);
-                } else {
-                    setAttendance(null);
-                    setAttendanceError("Attendance data unavailable");
-                }
-            } else {
-                setAttendance(null);
-                const errorMessage = attendanceResult.reason?.message || "Attendance data unavailable";
-                setAttendanceError(errorMessage);
+            // Determine which data needs fresh fetch
+            const needsFreshAttendance = !cachedAttendance;
+            const needsFreshMidmarks = !cachedMidmarks;
+
+            // If we have cached data, use it immediately
+            if (cachedAttendance) {
+                console.log("Using cached attendance data");
+                setAttendance(cachedAttendance);
+            }
+            if (cachedMidmarks) {
+                console.log("Using cached midmarks data");
+                setMidmarks(cachedMidmarks);
             }
 
-            if (midmarksResult.status === 'fulfilled') {
-                const data = midmarksResult.value;
-                if (data && data.subjects) {
-                    setMidmarks(data);
-                } else {
-                    setMidmarks(null);
-                    setMidmarksError("Midmarks data unavailable");
-                }
-            } else {
-                setMidmarks(null);
-                const errorMessage = midmarksResult.reason?.message || "Midmarks data unavailable";
-                setMidmarksError(errorMessage);
+            // Fetch fresh data only for what's not cached
+            const fetchPromises: Promise<any>[] = [];
+            if (needsFreshAttendance) {
+                fetchPromises.push(
+                    withTimeout(getAttendance(storedRollNo), 30000)
+                        .then(async (data) => {
+                            if (data && typeof data.percentage === 'number' && data.totalClasses && data.subjects) {
+                                setAttendance(data);
+                                await saveAttendanceToCache(data);
+                                console.log("Fetched and cached fresh attendance data");
+                            } else {
+                                setAttendance(null);
+                                setAttendanceError("Attendance data unavailable");
+                            }
+                        })
+                        .catch((error) => {
+                            setAttendance(null);
+                            setAttendanceError(error?.message || "Attendance data unavailable");
+                        })
+                );
             }
 
-            // Fetch Rank independently since it often changes with context
-            // We do this here for initial load, but also have separate effect for context change
+            if (needsFreshMidmarks) {
+                fetchPromises.push(
+                    withTimeout(getMidmarks(storedRollNo), 30000)
+                        .then(async (data) => {
+                            if (data && data.subjects) {
+                                setMidmarks(data);
+                                await saveMidmarksToCache(data);
+                                console.log("Fetched and cached fresh midmarks data");
+                            } else {
+                                setMidmarks(null);
+                                setMidmarksError("Midmarks data unavailable");
+                            }
+                        })
+                        .catch((error) => {
+                            setMidmarks(null);
+                            setMidmarksError(error?.message || "Midmarks data unavailable");
+                        })
+                );
+            }
+
+            // Wait for any fresh fetches to complete
+            await Promise.allSettled(fetchPromises);
+
+            // Fetch Rank with caching - check cache first, then API if needed
             try {
-                const rank = await withTimeout(getStudentRank(storedRollNo, rankContext), 10000);
-                setRankData(rank);
+                const cachedRank = await getCachedRank(rankContext);
+                if (cachedRank) {
+                    console.log("Using cached rank for context:", rankContext);
+                    setRankData(cachedRank);
+                } else {
+                    console.log("Fetching fresh rank from API for context:", rankContext);
+                    const rank = await withTimeout(getStudentRank(storedRollNo, rankContext), 10000);
+                    setRankData(rank);
+                    // Save to cache for 24 hours
+                    await saveRankToCache(rankContext, rank.rank, rank.totalStudents, rank.attendance);
+                }
             } catch (e) {
                 console.error("Failed to fetch rank:", e);
                 // Non-critical, just don't show rank
@@ -517,12 +555,21 @@ export default function HomeScreen() {
         }
     }, []);
 
-    // Effect to fetch rank when context changes
+    // Effect to fetch rank when context changes - check cache first
     useEffect(() => {
         if (rollNumber) {
-            getStudentRank(rollNumber, rankContext)
-                .then(setRankData)
-                .catch(e => console.error("Failed to update rank context:", e));
+            (async () => {
+                const cachedRank = await getCachedRank(rankContext);
+                if (cachedRank) {
+                    console.log("Using cached rank for context change:", rankContext);
+                    setRankData(cachedRank);
+                } else {
+                    console.log("Fetching fresh rank for context change:", rankContext);
+                    const rank = await getStudentRank(rollNumber, rankContext);
+                    setRankData(rank);
+                    await saveRankToCache(rankContext, rank.rank, rank.totalStudents, rank.attendance);
+                }
+            })().catch(e => console.error("Failed to update rank context:", e));
         }
     }, [rankContext, rollNumber]);
 
