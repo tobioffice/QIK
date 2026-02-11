@@ -22,6 +22,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Skeleton } from "../../components/Skeleton";
 import { getUserDetails, isValidRollNumber, syncUser } from "../../services/api";
 import {
+    clearAttendanceCache,
+    clearMidmarksCache,
+    clearRankCache,
     clearRollNumber,
     getRollNumber,
     saveRollNumber,
@@ -188,6 +191,13 @@ export default function ProfileScreen() {
         try {
             const info = await getUserDetails(trimmed);
             await saveRollNumber(trimmed);
+
+            // Clear all cached data since roll number changed
+            await Promise.all([
+                clearAttendanceCache(),
+                clearMidmarksCache(),
+                clearRankCache(),
+            ]);
 
             // Sync with backend
             try {
