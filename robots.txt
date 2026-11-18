@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://qik.tobioffice.dev/sitemap.xml
+Sitemap: https://qik.tobioffice.online/sitemap.xml
