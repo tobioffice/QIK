@@ -37,7 +37,7 @@ This Software is designed exclusively for students and faculty of **N.B.K.R. Ins
 ### 5. Data Privacy
 
 - The Software accesses academic data from official institute portals
-- User data is handled according to our [Privacy Policy](https://qik.tobioffice.dev/privacy.html)
+- User data is handled according to our [Privacy Policy](https://qik.tobioffice.online/privacy.html)
 - The Author is not responsible for data accuracy from third-party sources
 
 ### 6. Disclaimer of Warranties
@@ -61,7 +61,7 @@ This license shall be governed by the laws of India. Any disputes shall be subje
 For permissions, inquiries, or licensing questions:
 
 - **Email**: muraliaggipothu@gmail.com
-- **Website**: https://qik.tobioffice.dev
+- **Website**: https://qik.tobioffice.online
 
 ---
 

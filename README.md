@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://qik.tobioffice.dev">Website</a> •
+  <a href="https://qik.tobioffice.online">Website</a> •
   <a href="https://github.com/tobioffice/QIK/releases">Download</a> •
   <a href="#features">Features</a> •
   <a href="#installation">Installation</a>
@@ -121,7 +121,7 @@ This project is private and intended for N.B.K.R. Institute students only.
 
 - **Developer**: Murali Aggipothu
 - **Email**: muraliaggipothu@gmail.com
-- **Website**: [qik.tobioffice.dev](https://qik.tobioffice.dev)
+- **Website**: [qik.tobioffice.online](https://qik.tobioffice.online)
 
 ---
 
